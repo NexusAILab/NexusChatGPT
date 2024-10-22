@@ -47,7 +47,7 @@ export const getChatCompletion = async (
     ...customHeaders,
   };
   if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
-  if (sessionCookie) headers['Cookie'] = `session=${sessionCookie}`;
+  headers['Cookie'] = `session=${sessionCookie}`;
 
   if (isAzureEndpoint(endpoint) && apiKey) {
     headers['api-key'] = apiKey;
@@ -110,7 +110,7 @@ export const getChatCompletionStream = async (
     ...customHeaders,
   };
   if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
-  if (sessionCookie) headers['Cookie'] = `session=${sessionCookie}`;
+  headers['Cookie'] = `session=${sessionCookie}`;
 
   if (isAzureEndpoint(endpoint) && apiKey) {
     headers['api-key'] = apiKey;
