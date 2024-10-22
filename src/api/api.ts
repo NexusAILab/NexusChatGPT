@@ -47,6 +47,7 @@ export const getChatCompletion = async (
     ...customHeaders,
   };
   if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+  if (sessionCookie) headers['Cookie'] = `session=${sessionCookie}`;
 
   if (isAzureEndpoint(endpoint) && apiKey) {
     headers['api-key'] = apiKey;
@@ -85,7 +86,6 @@ export const getChatCompletion = async (
       messages,
       ...modifiedConfig, // Use modified config that excludes the penalties
       max_tokens: undefined,
-      session: sessionCookie,
       recaptcha_token: recaptchaToken
     }),
   });
@@ -110,6 +110,7 @@ export const getChatCompletionStream = async (
     ...customHeaders,
   };
   if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+  if (sessionCookie) headers['Cookie'] = `session=${sessionCookie}`;
 
   if (isAzureEndpoint(endpoint) && apiKey) {
     headers['api-key'] = apiKey;
@@ -147,7 +148,6 @@ export const getChatCompletionStream = async (
       ...modifiedConfig, // Use modified config that excludes the penalties
       max_tokens: undefined,
       stream: true,
-      session: sessionCookie,
       recaptcha_token: recaptchaToken
     }),
   });
@@ -186,11 +186,14 @@ export const submitShareGPT = async (body: ShareGPTSubmitBodyInterface) => {
   const recaptchaToken = await executeRecaptcha('submitShareGPT');
   const sessionCookie = getSessionCookie();
 
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  if (sessionCookie) headers['Cookie'] = `session=${sessionCookie}`;
+
   const request = await fetch('https://sharegpt.com/api/conversations', {
-    body: JSON.stringify({ ...body, recaptcha_token: recaptchaToken, session: sessionCookie }),
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    body: JSON.stringify({ ...body, recaptcha_token: recaptchaToken }),
+    headers,
     method: 'POST',
   });
 
