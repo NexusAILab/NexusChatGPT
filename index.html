@@ -20,27 +20,28 @@
     <meta name="twitter:card" content="summary_large_image" />
     <title>Nexus ChatGPT</title>
     <script>
-  // Function to get a cookie by name
-  function getCookie(name) {
-    const cookies = document.cookie.split(';').map(cookie => cookie.trim());
-    for (let cookie of cookies) {
-      if (cookie.startsWith(name + '=')) {
-        return cookie.substring((name + '=').length);
+      // Function to get a cookie by name
+      function getCookie(name) {
+        const cookies = document.cookie.split(';').map(cookie => cookie.trim());
+        console.log('Cookies Array:', cookies); // Debugging line
+        for (let cookie of cookies) {
+          if (cookie.startsWith(name + '=')) {
+            return cookie.substring((name + '=').length);
+          }
+        }
+        return null;
       }
-    }
-    return null;
-  }
 
-  window.onload = function() {
-    console.log('All Cookies:', document.cookie);
-    const sessionCookie = getCookie('session');
-    console.log('Session Cookie:', sessionCookie);
-    if (!sessionCookie) {
-      // If not, redirect to the login page
-      // window.location.href = 'https://login.nexusapi.tech/';
-    }
-  };
-</script>
+      window.onload = function() {
+        console.log('All Cookies:', document.cookie);
+        const sessionCookie = getCookie('session');
+        console.log('Session Cookie:', sessionCookie);
+        if (!sessionCookie) {
+          // If not, redirect to the login page
+          window.location.href = 'https://login.nexusapi.tech/';
+        }
+      };
+    </script>
     <script src="https://www.google.com/recaptcha/api.js?render=6LeIzz8qAAAAAFx2MY7vm0pLQpzWM_HFrK1sW8y5"></script>
   </head>
   <body>
