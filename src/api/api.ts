@@ -7,14 +7,11 @@ declare const grecaptcha: any;
 const executeRecaptcha = async (action: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     grecaptcha.ready(() => {
-      grecaptcha
-        .execute('6LeIzz8qAAAAAFx2MY7vm0pLQpzWM_HFrK1sW8y5', { action })
-        .then((token: string) => {
-          resolve(token);
-        })
-        .catch((error: any) => {
-          reject(error);
-        });
+      grecaptcha.execute('6LeIzz8qAAAAAFx2MY7vm0pLQpzWM_HFrK1sW8y5', { action }).then((token: string) => {
+        resolve(token);
+      }).catch((error: any) => {
+        reject(error);
+      });
     });
   });
 };
@@ -35,35 +32,6 @@ const getSessionCookie = (): string | undefined => {
   return undefined;
 };
 
-const makeRequest = (
-  method: string,
-  url: string,
-  headers: Record<string, string>,
-  body: any
-): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open(method, url, true);
-    xhr.withCredentials = true;
-
-    for (const key in headers) {
-      xhr.setRequestHeader(key, headers[key]);
-    }
-
-    xhr.onreadystatechange = () => {
-      if (xhr.readyState === 4) {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve(JSON.parse(xhr.responseText));
-        } else {
-          reject(new Error(xhr.responseText));
-        }
-      }
-    };
-
-    xhr.send(JSON.stringify(body));
-  });
-};
-
 export const getChatCompletion = async (
   endpoint: string,
   messages: MessageInterface[],
@@ -74,12 +42,13 @@ export const getChatCompletion = async (
   const recaptchaToken = await executeRecaptcha('getChatCompletion');
   const sessionCookie = getSessionCookie();
 
-  const headers: Record<string, string> = {
+  const headers: HeadersInit = {
     'Content-Type': 'application/json',
+    'X-Session-ID': '${sessionCookie}',
     ...customHeaders,
   };
   if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
-  if (sessionCookie) headers['Cookie'] = `session=${sessionCookie}`; // Add session cookie to headers
+  if (sessionCookie) headers['Cookie'] = `session=${sessionCookie}`;
 
   if (isAzureEndpoint(endpoint) && apiKey) {
     headers['api-key'] = apiKey;
@@ -111,15 +80,20 @@ export const getChatCompletion = async (
   // Create a new config object without frequency_penalty and presence_penalty
   const { frequency_penalty, presence_penalty, ...modifiedConfig } = config;
 
-  const body = {
-    messages,
-    ...modifiedConfig, // Use modified config that excludes the penalties
-    max_tokens: undefined,
-    session: sessionCookie,
-    recaptcha_token: recaptchaToken,
-  };
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      messages,
+      ...modifiedConfig, // Use modified config that excludes the penalties
+      max_tokens: undefined,
+      recaptcha_token: recaptchaToken
+    }),
+  });
+  if (!response.ok) throw new Error(await response.text());
 
-  return makeRequest('POST', endpoint, headers, body);
+  const data = await response.json();
+  return data;
 };
 
 export const getChatCompletionStream = async (
@@ -132,12 +106,13 @@ export const getChatCompletionStream = async (
   const recaptchaToken = await executeRecaptcha('getChatCompletionStream');
   const sessionCookie = getSessionCookie();
 
-  const headers: Record<string, string> = {
+  const headers: HeadersInit = {
     'Content-Type': 'application/json',
+    'X-Session-ID': '${sessionCookie}',
     ...customHeaders,
   };
   if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
-  if (sessionCookie) headers['Cookie'] = `session=${sessionCookie}`; // Add session cookie to headers
+  if (sessionCookie) headers['Cookie'] = `session=${sessionCookie}`;
 
   if (isAzureEndpoint(endpoint) && apiKey) {
     headers['api-key'] = apiKey;
@@ -167,34 +142,64 @@ export const getChatCompletionStream = async (
   // Create a new config object without frequency_penalty and presence_penalty
   const { frequency_penalty, presence_penalty, ...modifiedConfig } = config;
 
-  const body = {
-    messages,
-    ...modifiedConfig, // Use modified config that excludes the penalties
-    max_tokens: undefined,
-    stream: true,
-    session: sessionCookie,
-    recaptcha_token: recaptchaToken,
-  };
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      messages,
+      ...modifiedConfig, // Use modified config that excludes the penalties
+      max_tokens: undefined,
+      stream: true,
+      recaptcha_token: recaptchaToken
+    }),
+  });
 
-  return makeRequest('POST', endpoint, headers, body);
+  if (response.status === 404 || response.status === 405) {
+    const text = await response.text();
+    if (text.includes('model_not_found')) {
+      throw new Error(
+        text +
+          '\nMessage from Better ChatGPT:\nPlease ensure that you have access to the GPT-4 API!'
+      );
+    } else {
+      throw new Error(
+        'Message from Better ChatGPT:\nInvalid API endpoint! We recommend you to check your free API endpoint.'
+      );
+    }
+  }
+
+  if (response.status === 429 || !response.ok) {
+    const text = await response.text();
+    let error = text;
+    if (text.includes('insufficient_quota')) {
+      error +=
+        '\nMessage from Better ChatGPT:\nWe recommend changing your API endpoint or API key';
+    } else if (response.status === 429) {
+      error += '\nRate limited!';
+    }
+    throw new Error(error);
+  }
+
+  const stream = response.body;
+  return stream;
 };
 
 export const submitShareGPT = async (body: ShareGPTSubmitBodyInterface) => {
   const recaptchaToken = await executeRecaptcha('submitShareGPT');
   const sessionCookie = getSessionCookie();
 
-  const headers: Record<string, string> = {
+  const headers: HeadersInit = {
     'Content-Type': 'application/json',
-  };
-  if (sessionCookie) headers['Cookie'] = `session=${sessionCookie}`; // Add session cookie to headers
-
-  const requestBody = {
-    ...body,
-    recaptcha_token: recaptchaToken,
-    session: sessionCookie,
+    'X-Session-ID': '${sessionCookie}',
   };
 
-  const response = await makeRequest('POST', 'https://sharegpt.com/api/conversations', headers, requestBody);
+  const request = await fetch('https://sharegpt.com/api/conversations', {
+    body: JSON.stringify({ ...body, recaptcha_token: recaptchaToken }),
+    headers,
+    method: 'POST',
+  });
+
+  const response = await request.json();
   const { id } = response;
   const url = `https://shareg.pt/${id}`;
   window.open(url, '_blank');
