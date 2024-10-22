@@ -23,6 +23,7 @@
       // Function to get a cookie by name
       function getCookie(name) {
         const cookies = document.cookie.split(';').map(cookie => cookie.trim());
+        console.log('Cookies Array:', cookies); // Debugging line
         for (let cookie of cookies) {
           if (cookie.startsWith(name + '=')) {
             return cookie.substring((name + '=').length);
@@ -37,7 +38,7 @@
         console.log('Session Cookie:', sessionCookie);
         if (!sessionCookie) {
           // If not, redirect to the login page
-          //window.location.href = 'https://login.nexusapi.tech/';
+          window.location.href = 'https://login.nexusapi.tech/';
         }
       };
     </script>
