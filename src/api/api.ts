@@ -44,7 +44,6 @@ export const getChatCompletion = async (
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    'Recaptcha-Token': recaptchaToken,
     ...customHeaders,
   };
   if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
@@ -86,7 +85,8 @@ export const getChatCompletion = async (
       messages,
       ...modifiedConfig, // Use modified config that excludes the penalties
       max_tokens: undefined,
-      session: sessionCookie, // Add session cookie to the payload
+      session: sessionCookie,
+      recaptcha_token: recaptchaToken
     }),
   });
   if (!response.ok) throw new Error(await response.text());
