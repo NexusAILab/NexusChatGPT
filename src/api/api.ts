@@ -2,6 +2,20 @@ import { ShareGPTSubmitBodyInterface } from '@type/api';
 import { ConfigInterface, MessageInterface, ModelOptions } from '@type/chat';
 import { isAzureEndpoint } from '@utils/api';
 
+declare const grecaptcha: any;
+
+const executeRecaptcha = async (action: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    grecaptcha.ready(() => {
+      grecaptcha.execute('6LeIzz8qAAAAAFx2MY7vm0pLQpzWM_HFrK1sW8y5', { action }).then((token: string) => {
+        resolve(token);
+      }).catch((error: any) => {
+        reject(error);
+      });
+    });
+  });
+};
+
 export const getChatCompletion = async (
   endpoint: string,
   messages: MessageInterface[],
@@ -9,10 +23,14 @@ export const getChatCompletion = async (
   apiKey?: string,
   customHeaders?: Record<string, string>
 ) => {
+  const recaptchaToken = await executeRecaptcha('getChatCompletion');
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
+    'Recaptcha-Token': recaptchaToken,
     ...customHeaders,
   };
+  //const apiKey = "sk-G74ZCYvhv6DHlyWRak67hRLK2XD8A9Q_r21uHbt1KDoqkQEO"
   if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
 
   if (isAzureEndpoint(endpoint) && apiKey) {
@@ -27,7 +45,6 @@ export const getChatCompletion = async (
 
     const model = modelmapping[config.model] || config.model;
 
-    // set api version to 2023-07-01-preview for gpt-4 and gpt-4-32k, otherwise use 2023-03-15-preview
     const apiVersion =
       model === 'gpt-4' || model === 'gpt-4-32k'
         ? '2023-07-01-preview'
@@ -43,12 +60,15 @@ export const getChatCompletion = async (
     }
   }
 
+  // Create a new config object without frequency_penalty and presence_penalty
+  const { frequency_penalty, presence_penalty, ...modifiedConfig } = config;
+
   const response = await fetch(endpoint, {
     method: 'POST',
     headers,
     body: JSON.stringify({
       messages,
-      ...config,
+      ...modifiedConfig, // Use modified config that excludes the penalties
       max_tokens: undefined,
     }),
   });
@@ -65,8 +85,11 @@ export const getChatCompletionStream = async (
   apiKey?: string,
   customHeaders?: Record<string, string>
 ) => {
+  const recaptchaToken = await executeRecaptcha('getChatCompletionStream');
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
+    'Recaptcha-Token': recaptchaToken,
     ...customHeaders,
   };
   if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
@@ -81,11 +104,11 @@ export const getChatCompletionStream = async (
 
     const model = modelmapping[config.model] || config.model;
 
-    // set api version to 2023-07-01-preview for gpt-4 and gpt-4-32k, otherwise use 2023-03-15-preview
     const apiVersion =
       model === 'gpt-4' || model === 'gpt-4-32k'
         ? '2023-07-01-preview'
         : '2023-03-15-preview';
+
     const path = `openai/deployments/${model}/chat/completions?api-version=${apiVersion}`;
 
     if (!endpoint.endsWith(path)) {
@@ -96,19 +119,22 @@ export const getChatCompletionStream = async (
     }
   }
 
+  // Create a new config object without frequency_penalty and presence_penalty
+  const { frequency_penalty, presence_penalty, ...modifiedConfig } = config;
+
   const response = await fetch(endpoint, {
     method: 'POST',
     headers,
     body: JSON.stringify({
       messages,
-      ...config,
+      ...modifiedConfig, // Use modified config that excludes the penalties
       max_tokens: undefined,
       stream: true,
     }),
   });
+
   if (response.status === 404 || response.status === 405) {
     const text = await response.text();
-
     if (text.includes('model_not_found')) {
       throw new Error(
         text +
@@ -138,8 +164,10 @@ export const getChatCompletionStream = async (
 };
 
 export const submitShareGPT = async (body: ShareGPTSubmitBodyInterface) => {
+  const recaptchaToken = await executeRecaptcha('submitShareGPT');
+
   const request = await fetch('https://sharegpt.com/api/conversations', {
-    body: JSON.stringify(body),
+    body: JSON.stringify({ ...body, recaptcha_token: recaptchaToken }),
     headers: {
       'Content-Type': 'application/json',
     },
