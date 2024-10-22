@@ -16,6 +16,22 @@ const executeRecaptcha = async (action: string): Promise<string> => {
   });
 };
 
+const getSessionCookie = (): string | undefined => {
+  const name = 'session=';
+  const decodedCookie = decodeURIComponent(document.cookie);
+  const ca = decodedCookie.split(';');
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) === 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return undefined;
+};
+
 export const getChatCompletion = async (
   endpoint: string,
   messages: MessageInterface[],
@@ -24,13 +40,13 @@ export const getChatCompletion = async (
   customHeaders?: Record<string, string>
 ) => {
   const recaptchaToken = await executeRecaptcha('getChatCompletion');
+  const sessionCookie = getSessionCookie();
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     'Recaptcha-Token': recaptchaToken,
     ...customHeaders,
   };
-  //const apiKey = "sk-G74ZCYvhv6DHlyWRak67hRLK2XD8A9Q_r21uHbt1KDoqkQEO"
   if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
 
   if (isAzureEndpoint(endpoint) && apiKey) {
@@ -70,6 +86,7 @@ export const getChatCompletion = async (
       messages,
       ...modifiedConfig, // Use modified config that excludes the penalties
       max_tokens: undefined,
+      session: sessionCookie, // Add session cookie to the payload
     }),
   });
   if (!response.ok) throw new Error(await response.text());
@@ -86,10 +103,10 @@ export const getChatCompletionStream = async (
   customHeaders?: Record<string, string>
 ) => {
   const recaptchaToken = await executeRecaptcha('getChatCompletionStream');
+  const sessionCookie = getSessionCookie();
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    'Recaptcha-Token': recaptchaToken,
     ...customHeaders,
   };
   if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
@@ -130,6 +147,8 @@ export const getChatCompletionStream = async (
       ...modifiedConfig, // Use modified config that excludes the penalties
       max_tokens: undefined,
       stream: true,
+      session: sessionCookie,
+      recaptcha_token: recaptchaToken
     }),
   });
 
@@ -165,9 +184,10 @@ export const getChatCompletionStream = async (
 
 export const submitShareGPT = async (body: ShareGPTSubmitBodyInterface) => {
   const recaptchaToken = await executeRecaptcha('submitShareGPT');
+  const sessionCookie = getSessionCookie();
 
   const request = await fetch('https://sharegpt.com/api/conversations', {
-    body: JSON.stringify({ ...body, recaptcha_token: recaptchaToken }),
+    body: JSON.stringify({ ...body, recaptcha_token: recaptchaToken, session: sessionCookie }),
     headers: {
       'Content-Type': 'application/json',
     },
