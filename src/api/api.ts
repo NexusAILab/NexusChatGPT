@@ -85,6 +85,7 @@ export const getChatCompletion = async (
   const response = await fetch(endpoint, {
     method: 'POST',
     headers,
+    credentials: 'include',
     body: JSON.stringify({
       messages,
       ...modifiedConfig, // Use modified config that excludes the penalties
@@ -147,6 +148,7 @@ export const getChatCompletionStream = async (
   const response = await fetch(endpoint, {
     method: 'POST',
     headers,
+    credentials: 'include',
     body: JSON.stringify({
       messages,
       ...modifiedConfig, // Use modified config that excludes the penalties
