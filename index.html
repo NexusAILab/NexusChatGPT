@@ -34,7 +34,7 @@
 
       window.onload = function() {
         console.log('All Cookies:', document.cookie);
-        const sessionCookie = getCookie('session');
+        const sessionCookie = getCookie('session_id');
         console.log('Session Cookie:', sessionCookie);
         if (!sessionCookie) {
           // If not, redirect to the login page
