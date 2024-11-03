@@ -37,7 +37,6 @@ export const modelMaxToken = {
   'o1-preview': 128000,
   'o1-mini': 128000,
   'claude-3-5-sonnet': 128000,
-  'gpt-3.5-turbo': 4096,
   'llama-3.1-405B': 128000,
   'llama-3.2-90B': 128000,
 };
