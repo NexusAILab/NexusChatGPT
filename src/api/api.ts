@@ -3,7 +3,7 @@ import { ConfigInterface, MessageInterface, ModelOptions } from '@type/chat';
 import { isAzureEndpoint } from '@utils/api';
 
 declare const grecaptcha: any;
-
+//test
 const executeRecaptcha = async (action: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     grecaptcha.ready(() => {
