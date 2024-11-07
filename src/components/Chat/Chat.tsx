@@ -15,6 +15,12 @@ const Chat = () => {
       }`}
     >
       <MobileBar />
+      <div
+        className="cf-turnstile"
+        data-sitekey="0x4AAAAAAAzRsaZd0P9-qFot"
+        data-theme="light"
+        data-callback="onTurnstileSuccess"
+      ></div>
       <main className='relative h-full w-full transition-width flex flex-col overflow-hidden items-stretch flex-1'>
         <ChatContent />
         <StopGeneratingButton />
