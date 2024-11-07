@@ -106,13 +106,16 @@ const ChatContent = () => {
             }`}
           >
             {useStore.getState().generating || (
-              <div class="cf-turnstile" data-sitekey="0x4AAAAAAAzRsaZd0P9-qFot"></div>
-              <div className='md:w-[calc(100%-50px)] flex gap-4 flex-wrap justify-center'>
-                <DownloadChat saveRef={saveRef} />
-                <ShareGPT />
-                <CloneChat />
-              </div>
+              <>
+                <div class="cf-turnstile" data-sitekey="0x4AAAAAAAzRsaZd0P9-qFot"></div>
+                <div className='md:w-[calc(100%-50px)] flex gap-4 flex-wrap justify-center'>
+                  <DownloadChat saveRef={saveRef} />
+                  <ShareGPT />
+                  <CloneChat />
+                </div>
+              </>
             )}
+          </div>
           </div>
           <div className='w-full h-36'></div>
         </div>
