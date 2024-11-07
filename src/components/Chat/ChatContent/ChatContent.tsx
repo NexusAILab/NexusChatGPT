@@ -11,6 +11,7 @@ import CrossIcon from '@icon/CrossIcon';
 import useSubmit from '@hooks/useSubmit';
 import DownloadChat from './DownloadChat';
 import CloneChat from './CloneChat';
+import Recaptcha from './Recaptcha';
 import ShareGPT from '@components/ShareGPT';
 
 const ChatContent = () => {
@@ -118,7 +119,7 @@ const ChatContent = () => {
                   data-callback="onTurnstileSuccess"
                 ></div>
                 <DownloadChat saveRef={saveRef} />
-                <ShareGPT />
+                <Recaptcha />
                 <CloneChat />
               </div>
             )}
