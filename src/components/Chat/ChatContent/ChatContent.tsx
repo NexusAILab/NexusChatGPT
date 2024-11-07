@@ -112,12 +112,6 @@ const ChatContent = () => {
             {useStore.getState().generating || (
               <div className="md:w-[calc(100%-50px)] flex gap-4 flex-wrap justify-center mt-4">
                 {/* Buttons */}
-                <div
-                  className="cf-turnstile"
-                  data-sitekey="0x4AAAAAAAzRsaZd0P9-qFot"
-                  data-theme="light"
-                  data-callback="onTurnstileSuccess"
-                ></div>
                 <DownloadChat saveRef={saveRef} />
                 <Recaptcha />
                 <CloneChat />
