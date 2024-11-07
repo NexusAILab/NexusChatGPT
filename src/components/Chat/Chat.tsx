@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import useStore from '@store/store';
 
 import ChatContent from './ChatContent';
@@ -7,27 +7,38 @@ import StopGeneratingButton from '@components/StopGeneratingButton/StopGeneratin
 
 const Chat = () => {
   const hideSideMenu = useStore((state) => state.hideSideMenu);
-  const [turnstileToken, setTurnstileToken] = useState(null);
+  const [isTurnstileSuccess, setIsTurnstileSuccess] = useState(false);
+  const turnstileRef = useRef(null);
 
   useEffect(() => {
-    // Load the Cloudflare Turnstile script
-    const script = document.createElement('script');
-    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
-
-    // Define the callback function
+    // Define the callback function for Turnstile success
     window.onTurnstileSuccess = function(token) {
-      console.log('Turnstile verification success:', token);
-      setTurnstileToken(token);
-      // You can send this token to your server to verify it
+      // Turnstile challenge passed successfully
+      setIsTurnstileSuccess(true);
+      // You can send the token to your server for verification if needed
+      console.log('Turnstile token:', token);
     };
 
+    // Function to render the Turnstile widget
+    const renderTurnstile = () => {
+      if (window.turnstile && turnstileRef.current) {
+        window.turnstile.render(turnstileRef.current, {
+          sitekey: '0x4AAAAAAAzRsaZd0P9-qFot',
+          theme: 'light',
+          callback: 'onTurnstileSuccess',
+        });
+      } else {
+        // If turnstile is not available yet, try again after some time
+        setTimeout(renderTurnstile, 500);
+      }
+    };
+
+    // Start rendering the Turnstile widget
+    renderTurnstile();
+
     return () => {
-      // Cleanup when the component unmounts
+      // Clean up the callback function when the component unmounts
       delete window.onTurnstileSuccess;
-      document.body.removeChild(script);
     };
   }, []);
 
@@ -38,20 +49,21 @@ const Chat = () => {
       }`}
     >
       <MobileBar />
-      <main className="relative h-full w-full transition-width flex flex-col overflow-hidden items-stretch flex-1">
-        <div
-          className="cf-turnstile"
-          data-sitekey="0x4AAAAAAAzRsaZd0P9-qFot"
-          data-theme="light"
-          data-callback="onTurnstileSuccess"
-        ></div>
-        {turnstileToken ? (
+      <main className='relative h-full w-full transition-width flex flex-col overflow-hidden items-stretch flex-1'>
+        {!isTurnstileSuccess && (
+          <div
+            ref={turnstileRef}
+            className="cf-turnstile"
+            data-sitekey="0x4AAAAAAAzRsaZd0P9-qFot"
+            data-theme="light"
+            data-callback="onTurnstileSuccess"
+          ></div>
+        )}
+        {isTurnstileSuccess && (
           <>
             <ChatContent />
             <StopGeneratingButton />
           </>
-        ) : (
-          <p>Please complete the verification to proceed.</p>
         )}
       </main>
     </div>
