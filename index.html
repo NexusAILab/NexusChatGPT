@@ -32,6 +32,10 @@
         return null;
       }
 
+      function onTurnstileSuccess(token) {
+        console.log('Turnstile token:', token);
+      }
+
       window.onload = function() {
         console.log('All Cookies:', document.cookie);
         const sessionCookie = getCookie('session_id');
