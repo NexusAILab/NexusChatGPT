@@ -1,9 +1,15 @@
 import React, { useEffect, useRef } from 'react';
 
-const Recaptcha = () => {
-  const turnstileRef = useRef(null);
+declare global {
+  interface Window {
+    onTurnstileSuccess: (token: string) => void;
+  }
+}
 
-  const onTurnstileSuccess = (token) => {
+const Recaptcha = () => {
+  const turnstileRef = useRef<HTMLDivElement>(null);
+
+  const onTurnstileSuccess = (token: string) => {
     // Handle the success callback with the received token
     console.log('Turnstile success:', token);
     // You can send the token to your server for verification here
