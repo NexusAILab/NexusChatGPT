@@ -5,14 +5,22 @@ import ChatContent from './ChatContent';
 import MobileBar from '../MobileBar';
 import StopGeneratingButton from '@components/StopGeneratingButton/StopGeneratingButton';
 
+// Extend the Window interface to include the Turnstile properties
+declare global {
+  interface Window {
+    onTurnstileSuccess: (token: string) => void;
+    turnstile: any;
+  }
+}
+
 const Chat = () => {
   const hideSideMenu = useStore((state) => state.hideSideMenu);
   const [isTurnstileSuccess, setIsTurnstileSuccess] = useState(false);
-  const turnstileRef = useRef(null);
+  const turnstileRef = useRef<HTMLDivElement>(null); // Correctly type the ref
 
   useEffect(() => {
     // Define the callback function for Turnstile success
-    window.onTurnstileSuccess = function(token) {
+    window.onTurnstileSuccess = function (token: string) {
       // Turnstile challenge passed successfully
       setIsTurnstileSuccess(true);
       // You can send the token to your server for verification if needed
@@ -49,7 +57,7 @@ const Chat = () => {
       }`}
     >
       <MobileBar />
-      <main className='relative h-full w-full transition-width flex flex-col overflow-hidden items-stretch flex-1'>
+      <main className="relative h-full w-full transition-width flex flex-col overflow-hidden items-stretch flex-1">
         {!isTurnstileSuccess && (
           <div
             ref={turnstileRef}
