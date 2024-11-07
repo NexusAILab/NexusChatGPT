@@ -16,6 +16,13 @@ const executeRecaptcha = async (action: string): Promise<string> => {
   });
 };
 
+const getTurnstileToken = (): string | null => {
+  const turnstileInput = document.querySelector(
+    '.cf-turnstile input[name="cf-turnstile-response"]'
+  ) as HTMLInputElement;
+  return turnstileInput ? turnstileInput.value : null;
+};
+
 const getSessionCookie = (): string | undefined => {
   const name = 'session_id=';
   const decodedCookie = decodeURIComponent(document.cookie);
@@ -41,7 +48,7 @@ export const getChatCompletion = async (
 ) => {
   const recaptchaToken = await executeRecaptcha('getChatCompletion');
   const sessionCookie = getSessionCookie();
-
+  const turnstileToken = getTurnstileToken();
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...customHeaders,
@@ -58,7 +65,8 @@ export const getChatCompletion = async (
       ...modifiedConfig, // Use modified config that excludes the penalties
       max_tokens: undefined,
       session: sessionCookie,
-      recaptcha_token: recaptchaToken
+      recaptcha_token: recaptchaToken,
+      turnstile_token: turnstileToken
     }),
   });
   if (!response.ok) throw new Error(await response.text());
@@ -76,7 +84,7 @@ export const getChatCompletionStream = async (
 ) => {
   const recaptchaToken = await executeRecaptcha('getChatCompletionStream');
   const sessionCookie = getSessionCookie();
-
+  const turnstileToken = getTurnstileToken();
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...customHeaders,
@@ -95,7 +103,8 @@ export const getChatCompletionStream = async (
       max_tokens: undefined,
       stream: true,
       session: sessionCookie,
-      recaptcha_token: recaptchaToken
+      recaptcha_token: recaptchaToken,
+      turnstile_token: turnstileToken
     }),
   });
 
