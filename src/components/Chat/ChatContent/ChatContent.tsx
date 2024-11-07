@@ -109,7 +109,7 @@ const ChatContent = () => {
             }`}
           >
             {useStore.getState().generating || (
-              <>
+              <div className="md:w-[calc(100%-50px)] flex gap-4 flex-wrap justify-center mt-4">
                 {/* Captcha */}
                 <div
                   className="cf-turnstile"
@@ -117,12 +117,10 @@ const ChatContent = () => {
                 ></div>
 
                 {/* Buttons */}
-                <div className="md:w-[calc(100%-50px)] flex gap-4 flex-wrap justify-center mt-4">
-                  <DownloadChat saveRef={saveRef} />
-                  <ShareGPT />
-                  <CloneChat />
-                </div>
-              </>
+                <DownloadChat saveRef={saveRef} />
+                <ShareGPT />
+                <CloneChat />
+              </div>
             )}
           </div>
           <div className="w-full h-36"></div>
