@@ -98,16 +98,19 @@ const ChatContent = () => {
               </div>
             </div>
           )}
-          <div className='mt-4 w-full m-auto  {hideSideMenu ? 'md:max-w-5xl lg:max-w-5xl xl:max-w-6xl' : 'md:max-w-3xl lg:max-w-3xl xl:max-w-4xl'}'>
+          <div
+            className={`mt-4 w-full m-auto  ${
+              hideSideMenu
+                ? 'md:max-w-5xl lg:max-w-5xl xl:max-w-6xl'
+                : 'md:max-w-3xl lg:max-w-3xl xl:max-w-4xl'
+            }`}
+          >
             {useStore.getState().generating || (
-              <>
-                <div className='cf-turnstile' data-sitekey='0x4AAAAAAAzRsaZd0P9-qFot'></div>
-                <div className='md:w-[calc(100%-50px)] flex gap-4 flex-wrap justify-center'>
-                  <DownloadChat saveRef={saveRef} />
-                  <ShareGPT />
-                  <CloneChat />
-                </div>
-              </>
+              <div className='md:w-[calc(100%-50px)] flex gap-4 flex-wrap justify-center'>
+                <DownloadChat saveRef={saveRef} />
+                <ShareGPT />
+                <CloneChat />
+              </div>
             )}
           </div>
           <div className='w-full h-36'></div>
