@@ -113,7 +113,6 @@ const ChatContent = () => {
               <div className="md:w-[calc(100%-50px)] flex gap-4 flex-wrap justify-center mt-4">
                 {/* Buttons */}
                 <DownloadChat saveRef={saveRef} />
-                <Recaptcha />
                 <CloneChat />
               </div>
             )}
