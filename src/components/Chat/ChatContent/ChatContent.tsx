@@ -11,7 +11,6 @@ import CrossIcon from '@icon/CrossIcon';
 import useSubmit from '@hooks/useSubmit';
 import DownloadChat from './DownloadChat';
 import CloneChat from './CloneChat';
-// Removed unused import of Recaptcha
 import ShareGPT from '@components/ShareGPT';
 
 const ChatContent = () => {
@@ -34,41 +33,19 @@ const ChatContent = () => {
       : 0
   );
   const advancedMode = useStore((state) => state.advancedMode);
-  const generating = useStore((state) => state.generating);
+  const generating = useStore.getState().generating;
   const hideSideMenu = useStore((state) => state.hideSideMenu);
 
   const saveRef = useRef<HTMLDivElement>(null);
 
-  // Clear error at the start of generating new messages
+  // clear error at the start of generating new messages
   useEffect(() => {
     if (generating) {
       setError('');
     }
-  }, [generating, setError]);
+  }, [generating]);
 
   const { error } = useSubmit();
-
-  // Debug logs
-  console.log('ChatContent component rendered');
-  console.log('Messages:', messages);
-  console.log('Generating:', generating);
-  console.log('Error:', error);
-
-  // Load Cloudflare Turnstile script
-  useEffect(() => {
-    if (!generating) {
-      const script = document.createElement('script');
-      script.src =
-        'https://challenges.cloudflare.com/turnstile/v0/api.js';
-      script.async = true;
-      document.body.appendChild(script);
-
-      // Cleanup script when component unmounts or when generating changes
-      return () => {
-        document.body.removeChild(script);
-      };
-    }
-  }, [generating]);
 
   return (
     <div className="flex-1 overflow-hidden">
@@ -88,9 +65,7 @@ const ChatContent = () => {
             )}
             {messages?.map(
               (message, index) =>
-                (advancedMode ||
-                  index !== 0 ||
-                  message.role !== 'system') && (
+                (advancedMode || index !== 0 || message.role !== 'system') && (
                   <React.Fragment key={index}>
                     <Message
                       role={message.role}
@@ -111,7 +86,6 @@ const ChatContent = () => {
             messageIndex={stickyIndex}
             sticky
           />
-
           {error !== '' && (
             <div className="relative py-2 px-3 w-3/5 mt-3 max-md:w-11/12 border rounded-md border-red-500 bg-red-500/10">
               <div className="text-gray-600 dark:text-gray-100 text-sm whitespace-pre-wrap">
@@ -127,28 +101,26 @@ const ChatContent = () => {
               </div>
             </div>
           )}
-
           <div
-            className={`mt-4 w-full m-auto ${
+            className={`mt-4 w-full m-auto  ${
               hideSideMenu
                 ? 'md:max-w-5xl lg:max-w-5xl xl:max-w-6xl'
                 : 'md:max-w-3xl lg:max-w-3xl xl:max-w-4xl'
             }`}
           >
-            {!generating && (
-              <>
-                {/* Cloudflare Turnstile Captcha */}
+            {useStore.getState().generating || (
+              <div className="md:w-[calc(100%-50px)] flex gap-4 flex-wrap justify-center mt-4">
+                {/* Buttons */}
                 <div
                   className="cf-turnstile"
                   data-sitekey="0x4AAAAAAAzRsaZd0P9-qFot"
+                  data-theme="light"
+                  data-callback="onTurnstileSuccess"
                 ></div>
-
-                <div className="md:w-[calc(100%-50px)] flex gap-4 flex-wrap justify-center mt-4">
-                  {/* Buttons */}
-                  <DownloadChat saveRef={saveRef} />
-                  <CloneChat />
-                </div>
-              </>
+                <DownloadChat saveRef={saveRef} />
+                <ShareGPT />
+                <CloneChat />
+              </div>
             )}
           </div>
           <div className="w-full h-36"></div>
