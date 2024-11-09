@@ -82,7 +82,7 @@ export const getChatCompletionStream = async (
   apiKey?: string,
   customHeaders?: Record<string, string>
 ) => {
-  const recaptchaToken = await executeRecaptcha('getChatCompletionStream');
+  const recaptchaToken = await executeRecaptcha('ChatCompletionStream');
   const sessionCookie = getSessionCookie();
   const turnstileToken = getTurnstileToken();
   const headers: HeadersInit = {
