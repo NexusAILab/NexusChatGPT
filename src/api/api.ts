@@ -7,7 +7,7 @@ declare const grecaptcha: any;
 const executeRecaptcha = async (action: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     grecaptcha.ready(() => {
-      grecaptcha.execute('6LeIzz8qAAAAAFx2MY7vm0pLQpzWM_HFrK1sW8y5', { action }).then((token: string) => {
+      grecaptcha.execute('6Lf9B3oqAAAAAPemzZE9SYPkj3lYSlqYbf7qun9K', { action }).then((token: string) => {
         resolve(token);
       }).catch((error: any) => {
         reject(error);
