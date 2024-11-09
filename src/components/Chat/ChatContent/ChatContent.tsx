@@ -11,7 +11,7 @@ import CrossIcon from '@icon/CrossIcon';
 import useSubmit from '@hooks/useSubmit';
 import DownloadChat from './DownloadChat';
 import CloneChat from './CloneChat';
-import Recaptcha from './Recaptcha';
+// Removed unused import of Recaptcha
 import ShareGPT from '@components/ShareGPT';
 
 const ChatContent = () => {
@@ -54,6 +54,22 @@ const ChatContent = () => {
   console.log('Generating:', generating);
   console.log('Error:', error);
 
+  // Load Cloudflare Turnstile script
+  useEffect(() => {
+    if (!generating) {
+      const script = document.createElement('script');
+      script.src =
+        'https://challenges.cloudflare.com/turnstile/v0/api.js';
+      script.async = true;
+      document.body.appendChild(script);
+
+      // Cleanup script when component unmounts or when generating changes
+      return () => {
+        document.body.removeChild(script);
+      };
+    }
+  }, [generating]);
+
   return (
     <div className="flex-1 overflow-hidden">
       <ScrollToBottom
@@ -72,7 +88,9 @@ const ChatContent = () => {
             )}
             {messages?.map(
               (message, index) =>
-                (advancedMode || index !== 0 || message.role !== 'system') && (
+                (advancedMode ||
+                  index !== 0 ||
+                  message.role !== 'system') && (
                   <React.Fragment key={index}>
                     <Message
                       role={message.role}
@@ -117,18 +135,20 @@ const ChatContent = () => {
                 : 'md:max-w-3xl lg:max-w-3xl xl:max-w-4xl'
             }`}
           >
-            {/* Inserted cf-turnstile div */}
-            <div
-              className="cf-turnstile"
-              data-sitekey="0x4AAAAAAAzRsaZd0P9-qFot"
-            ></div>
-
             {!generating && (
-              <div className="md:w-[calc(100%-50px)] flex gap-4 flex-wrap justify-center mt-4">
-                {/* Buttons */}
-                <DownloadChat saveRef={saveRef} />
-                <CloneChat />
-              </div>
+              <>
+                {/* Cloudflare Turnstile Captcha */}
+                <div
+                  className="cf-turnstile"
+                  data-sitekey="0x4AAAAAAAzRsaZd0P9-qFot"
+                ></div>
+
+                <div className="md:w-[calc(100%-50px)] flex gap-4 flex-wrap justify-center mt-4">
+                  {/* Buttons */}
+                  <DownloadChat saveRef={saveRef} />
+                  <CloneChat />
+                </div>
+              </>
             )}
           </div>
           <div className="w-full h-36"></div>
