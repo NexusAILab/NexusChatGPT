@@ -34,19 +34,25 @@ const ChatContent = () => {
       : 0
   );
   const advancedMode = useStore((state) => state.advancedMode);
-  const generating = useStore.getState().generating;
+  const generating = useStore((state) => state.generating);
   const hideSideMenu = useStore((state) => state.hideSideMenu);
 
   const saveRef = useRef<HTMLDivElement>(null);
 
-  // clear error at the start of generating new messages
+  // Clear error at the start of generating new messages
   useEffect(() => {
     if (generating) {
       setError('');
     }
-  }, [generating]);
+  }, [generating, setError]);
 
   const { error } = useSubmit();
+
+  // Debug logs
+  console.log('ChatContent component rendered');
+  console.log('Messages:', messages);
+  console.log('Generating:', generating);
+  console.log('Error:', error);
 
   return (
     <div className="flex-1 overflow-hidden">
@@ -87,6 +93,7 @@ const ChatContent = () => {
             messageIndex={stickyIndex}
             sticky
           />
+
           {error !== '' && (
             <div className="relative py-2 px-3 w-3/5 mt-3 max-md:w-11/12 border rounded-md border-red-500 bg-red-500/10">
               <div className="text-gray-600 dark:text-gray-100 text-sm whitespace-pre-wrap">
@@ -102,14 +109,21 @@ const ChatContent = () => {
               </div>
             </div>
           )}
+
           <div
-            className={`mt-4 w-full m-auto  ${
+            className={`mt-4 w-full m-auto ${
               hideSideMenu
                 ? 'md:max-w-5xl lg:max-w-5xl xl:max-w-6xl'
                 : 'md:max-w-3xl lg:max-w-3xl xl:max-w-4xl'
             }`}
           >
-            {useStore.getState().generating || (
+            {/* Inserted cf-turnstile div */}
+            <div
+              className="cf-turnstile"
+              data-sitekey="0x4AAAAAAAzRsaZd0P9-qFot"
+            ></div>
+
+            {!generating && (
               <div className="md:w-[calc(100%-50px)] flex gap-4 flex-wrap justify-center mt-4">
                 {/* Buttons */}
                 <DownloadChat saveRef={saveRef} />
