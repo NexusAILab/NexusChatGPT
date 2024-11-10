@@ -130,8 +130,9 @@ const ChatContent = () => {
                   setTurnstileToken(null);
                 }}
                 theme='auto'
-                refreshExpired={true} // Add this line
+                retry='auto' // Corrected prop and value
               />
+
             </div>
 
             {!useStore.getState().generating && (
