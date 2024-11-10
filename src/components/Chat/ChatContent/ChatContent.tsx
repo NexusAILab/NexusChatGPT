@@ -115,21 +115,22 @@ const ChatContent = () => {
             {/* Render the Turnstile CAPTCHA above the buttons */}
             <div className='flex justify-center my-4'>
               <Turnstile
-                sitekey='0x4AAAAAAAzRsaZd0P9-qFot' 
+                sitekey='0x4AAAAAAAzRsaZd0P9-qFot'
                 onSuccess={(token) => {
                   console.log('Turnstile success:', token);
-                  setCaptchaSuccess(true); 
-                  setTurnstileToken(token); 
+                  setCaptchaSuccess(true);
+                  setTurnstileToken(token);
                 }}
                 onError={() => {
                   console.error('Turnstile error');
                 }}
                 onExpire={() => {
                   console.log('Turnstile expired');
-                  setCaptchaSuccess(false); 
-                  setTurnstileToken(null); 
+                  setCaptchaSuccess(false);
+                  setTurnstileToken(null);
                 }}
-                theme='auto' 
+                theme='auto'
+                refreshExpired={true} // Add this line
               />
             </div>
 
