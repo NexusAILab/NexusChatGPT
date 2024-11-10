@@ -43,8 +43,8 @@ const ChatContent = () => {
   const [captchaSuccess, setCaptchaSuccess] = useState(false);
   const setTurnstileToken = useStore((state) => state.setTurnstileToken);
 
-  // Ref for the Turnstile component
-  const turnstileRef = useRef(null);
+  // State variable to force re-rendering of the Turnstile component
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
 
   // Clear error at the start of generating new messages
   useEffect(() => {
@@ -53,17 +53,17 @@ const ChatContent = () => {
     }
   }, [generating]);
 
-  const { error } = useSubmit();
-
-  // Reset the Turnstile after submission
+  // Reset Turnstile after each submit request by changing the key
   useEffect(() => {
-    if (!generating && turnstileRef.current) {
+    if (!generating) {
       console.log('Resetting Turnstile after submission');
-      turnstileRef.current.reset();
+      setCaptchaResetKey((prevKey) => prevKey + 1);
       setTurnstileToken(null);
       setCaptchaSuccess(false);
     }
   }, [generating]);
+
+  const { error } = useSubmit();
 
   return (
     <div className='flex-1 overflow-hidden'>
@@ -81,7 +81,7 @@ const ChatContent = () => {
             {!generating && advancedMode && messages?.length === 0 && (
               <NewMessageButton messageIndex={-1} />
             )}
-            {messages?.map((message, index) => (
+            {messages?.map((message, index) =>
               (advancedMode || index !== 0 || message.role !== 'system') && (
                 <React.Fragment key={index}>
                   <Message
@@ -94,7 +94,7 @@ const ChatContent = () => {
                   )}
                 </React.Fragment>
               )
-            ))}
+            )}
           </div>
 
           <Message
@@ -128,7 +128,7 @@ const ChatContent = () => {
             {/* Render the Turnstile CAPTCHA above the buttons */}
             <div className='flex justify-center my-4'>
               <Turnstile
-                ref={turnstileRef}
+                key={captchaResetKey} // Use captchaResetKey to force re-render
                 sitekey='0x4AAAAAAAzRsaZd0P9-qFot'
                 onSuccess={(token) => {
                   console.log('Turnstile success:', token);
