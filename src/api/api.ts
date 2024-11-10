@@ -3,24 +3,6 @@ import { ConfigInterface, MessageInterface, ModelOptions } from '@type/chat';
 import { isAzureEndpoint } from '@utils/api';
 import useStore from '@store/store';
 
-declare const grecaptcha: any;
-
-// Existing executeRecaptcha function
-const executeRecaptcha = async (action: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    grecaptcha.ready(() => {
-      grecaptcha
-        .execute('6Lf9B3oqAAAAAPemzZE9SYPkj3lYSlqYbf7qun9K', { action })
-        .then((token: string) => {
-          resolve(token);
-        })
-        .catch((error: any) => {
-          reject(error);
-        });
-    });
-  });
-};
-
 // Existing getSessionCookie function
 const getSessionCookie = (): string | undefined => {
   const name = 'session_id=';
@@ -38,7 +20,7 @@ const getSessionCookie = (): string | undefined => {
   return undefined;
 };
 
-// getChatCompletion function (unchanged)
+// getChatCompletion function (updated)
 export const getChatCompletion = async (
   endpoint: string,
   messages: MessageInterface[],
@@ -46,7 +28,6 @@ export const getChatCompletion = async (
   apiKey?: string,
   customHeaders?: Record<string, string>
 ) => {
-  const recaptchaToken = await executeRecaptcha('getChatCompletion');
   const sessionCookie = getSessionCookie();
   const turnstileToken = useStore.getState().turnstileToken;
   const headers: HeadersInit = {
@@ -65,7 +46,6 @@ export const getChatCompletion = async (
       ...modifiedConfig, // Use modified config that excludes the penalties
       max_tokens: undefined,
       session: sessionCookie,
-      recaptcha_token: recaptchaToken,
       turnstile_token: turnstileToken, // Already included
     }),
   });
@@ -75,7 +55,7 @@ export const getChatCompletion = async (
   return data;
 };
 
-// getChatCompletionStream function (unchanged)
+// getChatCompletionStream function (updated)
 export const getChatCompletionStream = async (
   endpoint: string,
   messages: MessageInterface[],
@@ -83,7 +63,6 @@ export const getChatCompletionStream = async (
   apiKey?: string,
   customHeaders?: Record<string, string>
 ) => {
-  const recaptchaToken = await executeRecaptcha('getChatCompletionStream');
   const sessionCookie = getSessionCookie();
   const turnstileToken = useStore.getState().turnstileToken;
   const headers: HeadersInit = {
@@ -104,7 +83,6 @@ export const getChatCompletionStream = async (
       max_tokens: undefined,
       stream: true,
       session: sessionCookie,
-      recaptcha_token: recaptchaToken,
       turnstile_token: turnstileToken, // Already included
     }),
   });
