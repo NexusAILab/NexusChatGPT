@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import ScrollToBottom from 'react-scroll-to-bottom';
 import useStore from '@store/store';
 
@@ -11,8 +11,7 @@ import CrossIcon from '@icon/CrossIcon';
 import useSubmit from '@hooks/useSubmit';
 import DownloadChat from './DownloadChat';
 import CloneChat from './CloneChat';
-import ShareGPT from '@components/ShareGPT';
-import Turnstile from 'react-turnstile';
+import Turnstile, { getTurnstile } from 'react-turnstile'; // Import getTurnstile
 
 const ChatContent = () => {
   const inputRole = useStore((state) => state.inputRole);
@@ -43,8 +42,8 @@ const ChatContent = () => {
   const [captchaSuccess, setCaptchaSuccess] = useState(false);
   const setTurnstileToken = useStore((state) => state.setTurnstileToken);
 
-  // Reference to the Turnstile component
-  const turnstileRef = useRef(null);
+  // State to store the Turnstile widget ID
+  const [turnstileWidgetId, setTurnstileWidgetId] = useState<string | null>(null);
 
   // Clear error at the start of generating new messages
   useEffect(() => {
@@ -53,16 +52,18 @@ const ChatContent = () => {
     }
   }, [generating]);
 
-  const { error, onSubmit } = useSubmit();
+  // Destructure 'handleSubmit' instead of 'onSubmit'
+  const { error, handleSubmit } = useSubmit();
 
   // Function to handle form submission
   const handleSubmission = async () => {
     // Your submission logic here
-    await onSubmit();
+    await handleSubmit();
 
-    // After submission, reset the Turnstile widget to get a new token
-    if (turnstileRef.current) {
-      turnstileRef.current.reset();
+    // After submission, reset the Turnstile widget
+    const turnstile = getTurnstile();
+    if (turnstile && turnstileWidgetId !== null) {
+      turnstile.reset(turnstileWidgetId);
     }
   };
 
@@ -130,8 +131,12 @@ const ChatContent = () => {
             {/* Render the Turnstile CAPTCHA above the buttons */}
             <div className='flex justify-center my-4'>
               <Turnstile
-                ref={turnstileRef}
                 sitekey='0x4AAAAAAAzRsaZd0P9-qFot'
+                // Get the widget ID on load
+                onLoad={(widgetId) => {
+                  setTurnstileWidgetId(widgetId);
+                  console.log('Turnstile widget loaded with ID:', widgetId);
+                }}
                 onSuccess={(token) => {
                   console.log('Turnstile success:', token);
                   setCaptchaSuccess(true);
@@ -146,8 +151,9 @@ const ChatContent = () => {
                   setTurnstileToken(null);
 
                   // Reset the widget to get a new token
-                  if (turnstileRef.current) {
-                    turnstileRef.current.reset();
+                  const turnstile = getTurnstile();
+                  if (turnstile && turnstileWidgetId !== null) {
+                    turnstile.reset(turnstileWidgetId);
                   }
                 }}
                 theme='auto'
