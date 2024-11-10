@@ -41,7 +41,8 @@ const ChatContent = () => {
   
   // State to track CAPTCHA success
   const [captchaSuccess, setCaptchaSuccess] = useState(false);
-
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  
   // Clear error at the start of generating new messages
   useEffect(() => {
     if (generating) {
@@ -115,21 +116,22 @@ const ChatContent = () => {
             {!captchaSuccess && (
               <div className='flex justify-center my-4'>
                 <Turnstile
-                  sitekey='0x4AAAAAAAzRsaZd0P9-qFot' // Your site key
+                  sitekey='0x4AAAAAAAzRsaZd0P9-qFot' 
                   onSuccess={(token) => {
                     console.log('Turnstile success:', token);
-                    setCaptchaSuccess(true); // Update state to hide CAPTCHA
-                    // Handle the token if needed
+                    setCaptchaSuccess(true); 
+                    setTurnstileToken(token); 
                   }}
+
                   onError={() => {
                     console.error('Turnstile error');
-                    // Handle errors here
                   }}
                   onExpire={() => {
                     console.log('Turnstile expired');
-                    // Handle expiration if needed
+                    setCaptchaSuccess(false); 
+                    setTurnstileToken(null); 
                   }}
-                  theme='auto' // Pass 'theme' directly as a prop
+                  theme='auto' 
                 />
               </div>
             )}
