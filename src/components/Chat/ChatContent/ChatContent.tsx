@@ -12,6 +12,7 @@ import useSubmit from '@hooks/useSubmit';
 import DownloadChat from './DownloadChat';
 import CloneChat from './CloneChat';
 import ShareGPT from '@components/ShareGPT';
+import Turnstile, { useTurnstile } from 'react-turnstile'; // Added import
 
 const ChatContent = () => {
   const inputRole = useStore((state) => state.inputRole);
@@ -37,6 +38,7 @@ const ChatContent = () => {
   const hideSideMenu = useStore((state) => state.hideSideMenu);
 
   const saveRef = useRef<HTMLDivElement>(null);
+  const { token, reset } = useTurnstile(); // Hook to get the token and reset function
 
   // clear error at the start of generating new messages
   useEffect(() => {
@@ -46,6 +48,14 @@ const ChatContent = () => {
   }, [generating]);
 
   const { error } = useSubmit();
+
+  // Handle token changes (e.g., save it to state or send it to your server)
+  useEffect(() => {
+    if (token) {
+      console.log('Turnstile token:', token);
+      // You can dispatch an action or save the token to your store here
+    }
+  }, [token]);
 
   return (
     <div className='flex-1 overflow-hidden'>
@@ -63,18 +73,23 @@ const ChatContent = () => {
             {!generating && advancedMode && messages?.length === 0 && (
               <NewMessageButton messageIndex={-1} />
             )}
-            {messages?.map((message, index) => (
-              (advancedMode || index !== 0 || message.role !== 'system') && (
-                <React.Fragment key={index}>
-                  <Message
-                    role={message.role}
-                    content={message.content}
-                    messageIndex={index}
-                  />
-                  {!generating && advancedMode && <NewMessageButton messageIndex={index} />}
-                </React.Fragment>
-              )
-            ))}
+            {messages?.map(
+              (message, index) =>
+                (advancedMode ||
+                  index !== 0 ||
+                  message.role !== 'system') && (
+                  <React.Fragment key={index}>
+                    <Message
+                      role={message.role}
+                      content={message.content}
+                      messageIndex={index}
+                    />
+                    {!generating && advancedMode && (
+                      <NewMessageButton messageIndex={index} />
+                    )}
+                  </React.Fragment>
+                )
+            )}
           </div>
 
           <Message
@@ -105,7 +120,27 @@ const ChatContent = () => {
                 : 'md:max-w-3xl lg:max-w-3xl xl:max-w-4xl'
             }`}
           >
-            {useStore.getState().generating || (
+            {/* Render the Turnstile CAPTCHA above the buttons */}
+            <div className='flex justify-center my-4'>
+              <Turnstile
+                sitekey='0x4AAAAAAAzRsaZd0P9-qFot' // Your site key
+                onSuccess={(token) => {
+                  console.log('Turnstile success:', token);
+                  // Handle the successful CAPTCHA verification
+                }}
+                onError={() => {
+                  console.error('Turnstile error');
+                  // Handle errors here
+                }}
+                onExpire={() => {
+                  console.log('Turnstile expired');
+                  // Handle expiration (e.g., prompt user to complete CAPTCHA again)
+                }}
+                options={{ theme: 'auto', retry: 'auto' }} // Optional settings
+              />
+            </div>
+
+            {!useStore.getState().generating && (
               <div className='md:w-[calc(100%-50px)] flex gap-4 flex-wrap justify-center'>
                 <DownloadChat saveRef={saveRef} />
                 <CloneChat />
