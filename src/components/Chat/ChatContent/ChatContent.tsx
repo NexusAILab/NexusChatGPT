@@ -12,7 +12,7 @@ import useSubmit from '@hooks/useSubmit';
 import DownloadChat from './DownloadChat';
 import CloneChat from './CloneChat';
 import ShareGPT from '@components/ShareGPT';
-import Turnstile, { useTurnstile } from 'react-turnstile'; // Added import
+import Turnstile, { useTurnstile } from 'react-turnstile'; // Imported Turnstile
 
 const ChatContent = () => {
   const inputRole = useStore((state) => state.inputRole);
@@ -40,7 +40,7 @@ const ChatContent = () => {
   const saveRef = useRef<HTMLDivElement>(null);
   const { token, reset } = useTurnstile(); // Hook to get the token and reset function
 
-  // clear error at the start of generating new messages
+  // Clear error at the start of generating new messages
   useEffect(() => {
     if (generating) {
       setError('');
@@ -73,23 +73,18 @@ const ChatContent = () => {
             {!generating && advancedMode && messages?.length === 0 && (
               <NewMessageButton messageIndex={-1} />
             )}
-            {messages?.map(
-              (message, index) =>
-                (advancedMode ||
-                  index !== 0 ||
-                  message.role !== 'system') && (
-                  <React.Fragment key={index}>
-                    <Message
-                      role={message.role}
-                      content={message.content}
-                      messageIndex={index}
-                    />
-                    {!generating && advancedMode && (
-                      <NewMessageButton messageIndex={index} />
-                    )}
-                  </React.Fragment>
-                )
-            )}
+            {messages?.map((message, index) => (
+              (advancedMode || index !== 0 || message.role !== 'system') && (
+                <React.Fragment key={index}>
+                  <Message
+                    role={message.role}
+                    content={message.content}
+                    messageIndex={index}
+                  />
+                  {!generating && advancedMode && <NewMessageButton messageIndex={index} />}
+                </React.Fragment>
+              )
+            ))}
           </div>
 
           <Message
@@ -136,7 +131,8 @@ const ChatContent = () => {
                   console.log('Turnstile expired');
                   // Handle expiration (e.g., prompt user to complete CAPTCHA again)
                 }}
-                options={{ theme: 'auto', retry: 'auto' }} // Optional settings
+                theme='auto' // Moved 'theme' to be a direct prop
+                // Removed the 'options' prop
               />
             </div>
 
