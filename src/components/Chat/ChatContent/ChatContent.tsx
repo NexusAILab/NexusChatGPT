@@ -121,19 +121,22 @@ const ChatContent = () => {
                   setCaptchaSuccess(true);
                   setTurnstileToken(token);
                 }}
-                onError={() => {
-                  console.error('Turnstile error');
-                }}
                 onExpire={() => {
                   console.log('Turnstile expired');
                   setCaptchaSuccess(false);
                   setTurnstileToken(null);
+                  // Manually reset or execute the widget
+                  if (widgetRef.current) {
+                    window.turnstile.reset(widgetRef.current);
+                  }
                 }}
                 theme='auto'
                 retry='auto'
                 refreshExpired='auto'
+                onLoad={(id) => {
+                  widgetRef.current = id;
+                }}
               />
-
             </div>
 
             {!useStore.getState().generating && (
