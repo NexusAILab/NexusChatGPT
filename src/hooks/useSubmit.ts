@@ -13,13 +13,14 @@ const useSubmit = () => {
   const error = useStore((state) => state.error);
   const setError = useStore((state) => state.setError);
   const apiEndpoint = useStore((state) => state.apiEndpoint);
-  const apiKey = useStore((state) => state.apiKey);
+
+  // Set the API key manually here
+  const apiKey = "NexusChat";
+  
   const setGenerating = useStore((state) => state.setGenerating);
   const generating = useStore((state) => state.generating);
   const currentChatIndex = useStore((state) => state.currentChatIndex);
   const setChats = useStore((state) => state.setChats);
-  // Removed turnstileToken import as it's not needed here
-  // const turnstileToken = useStore((state) => state.turnstileToken);
 
   const generateTitle = async (
     message: MessageInterface[]
@@ -37,16 +38,14 @@ const useSubmit = () => {
           useStore.getState().apiEndpoint,
           message,
           _defaultChatConfig
-          // Removed turnstileToken from function call
         );
-      } else if (apiKey) {
-        // Own API key
+      } else {
+        // Using the manually set API key
         data = await getChatCompletion(
           useStore.getState().apiEndpoint,
           message,
           _defaultChatConfig,
           apiKey
-          // Removed turnstileToken from function call
         );
       }
     } catch (error: unknown) {
@@ -81,30 +80,13 @@ const useSubmit = () => {
       );
       if (messages.length === 0) throw new Error('Message exceed max token!');
 
-      // No API key (free)
-      if (!apiKey || apiKey.length === 0) {
-        // Official endpoint
-        if (apiEndpoint === officialAPIEndpoint) {
-          throw new Error(t('noApiKeyWarning') as string);
-        }
-
-        // Other endpoints
-        stream = await getChatCompletionStream(
-          useStore.getState().apiEndpoint,
-          messages,
-          chats[currentChatIndex].config
-          // Removed turnstileToken from function call
-        );
-      } else if (apiKey) {
-        // Own API key
-        stream = await getChatCompletionStream(
-          useStore.getState().apiEndpoint,
-          messages,
-          chats[currentChatIndex].config,
-          apiKey
-          // Removed turnstileToken from function call
-        );
-      }
+      // Using the manually set API key instead of checking if it's provided
+      stream = await getChatCompletionStream(
+        useStore.getState().apiEndpoint,
+        messages,
+        chats[currentChatIndex].config,
+        apiKey // Use the manually set API key
+      );
 
       if (stream) {
         if (stream.locked)
