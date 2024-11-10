@@ -28,10 +28,6 @@ const useSubmit = () => {
     let data;
     try {
       if (!apiKey || apiKey.length === 0) {
-        // Official endpoint
-        if (apiEndpoint === officialAPIEndpoint) {
-          throw new Error(t('noApiKeyWarning') as string);
-        }
 
         // Other endpoints
         data = await getChatCompletion(
