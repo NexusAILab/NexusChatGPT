@@ -12,7 +12,7 @@ import useSubmit from '@hooks/useSubmit';
 import DownloadChat from './DownloadChat';
 import CloneChat from './CloneChat';
 import ShareGPT from '@components/ShareGPT';
-import Turnstile from 'react-turnstile'; // Imported Turnstile
+import Turnstile from 'react-turnstile';
 
 const ChatContent = () => {
   const inputRole = useStore((state) => state.inputRole);
@@ -43,6 +43,9 @@ const ChatContent = () => {
   const [captchaSuccess, setCaptchaSuccess] = useState(false);
   const setTurnstileToken = useStore((state) => state.setTurnstileToken);
 
+  // Reference to the Turnstile component
+  const turnstileRef = useRef(null);
+
   // Clear error at the start of generating new messages
   useEffect(() => {
     if (generating) {
@@ -50,7 +53,18 @@ const ChatContent = () => {
     }
   }, [generating]);
 
-  const { error } = useSubmit();
+  const { error, onSubmit } = useSubmit();
+
+  // Function to handle form submission
+  const handleSubmission = async () => {
+    // Your submission logic here
+    await onSubmit();
+
+    // After submission, reset the Turnstile widget to get a new token
+    if (turnstileRef.current) {
+      turnstileRef.current.reset();
+    }
+  };
 
   return (
     <div className='flex-1 overflow-hidden'>
@@ -68,20 +82,21 @@ const ChatContent = () => {
             {!generating && advancedMode && messages?.length === 0 && (
               <NewMessageButton messageIndex={-1} />
             )}
-            {messages?.map((message, index) => (
-              (advancedMode || index !== 0 || message.role !== 'system') && (
-                <React.Fragment key={index}>
-                  <Message
-                    role={message.role}
-                    content={message.content}
-                    messageIndex={index}
-                  />
-                  {!generating && advancedMode && (
-                    <NewMessageButton messageIndex={index} />
-                  )}
-                </React.Fragment>
-              )
-            ))}
+            {messages?.map(
+              (message, index) =>
+                (advancedMode || index !== 0 || message.role !== 'system') && (
+                  <React.Fragment key={index}>
+                    <Message
+                      role={message.role}
+                      content={message.content}
+                      messageIndex={index}
+                    />
+                    {!generating && advancedMode && (
+                      <NewMessageButton messageIndex={index} />
+                    )}
+                  </React.Fragment>
+                )
+            )}
           </div>
 
           <Message
@@ -115,27 +130,29 @@ const ChatContent = () => {
             {/* Render the Turnstile CAPTCHA above the buttons */}
             <div className='flex justify-center my-4'>
               <Turnstile
+                ref={turnstileRef}
                 sitekey='0x4AAAAAAAzRsaZd0P9-qFot'
                 onSuccess={(token) => {
                   console.log('Turnstile success:', token);
                   setCaptchaSuccess(true);
                   setTurnstileToken(token);
                 }}
+                onError={() => {
+                  console.error('Turnstile error');
+                }}
                 onExpire={() => {
                   console.log('Turnstile expired');
                   setCaptchaSuccess(false);
                   setTurnstileToken(null);
-                  // Manually reset or execute the widget
-                  if (widgetRef.current) {
-                    window.turnstile.reset(widgetRef.current);
+
+                  // Reset the widget to get a new token
+                  if (turnstileRef.current) {
+                    turnstileRef.current.reset();
                   }
                 }}
                 theme='auto'
                 retry='auto'
                 refreshExpired='auto'
-                onLoad={(id) => {
-                  widgetRef.current = id;
-                }}
               />
             </div>
 
