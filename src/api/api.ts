@@ -1,25 +1,37 @@
 import { ShareGPTSubmitBodyInterface } from '@type/api';
-import { ConfigInterface, MessageInterface, ModelOptions } from '@type/chat';
+import { ConfigInterface, MessageInterface } from '@type/chat';
 import { isAzureEndpoint } from '@utils/api';
 
 declare const grecaptcha: any;
 
-// Existing executeRecaptcha function
+// Function to execute reCAPTCHA
 const executeRecaptcha = async (action: string): Promise<string> => {
   return new Promise((resolve, reject) => {
-    grecaptcha.ready(() => {
+    if (typeof grecaptcha !== 'undefined') {
       grecaptcha
-        .execute('6Lf9B3oqAAAAAPemzZE9SYPkj3lYSlqYbf7qun9K', { action })
-        .then((token: string) => {
-          resolve(token);
+        .ready(() => {
+          grecaptcha
+            .execute('6Lf9B3oqAAAAAPemzZE9SYPkj3lYSlqYbf7qun9K', { action })
+            .then((token: string) => {
+              resolve(token);
+            })
+            .catch((error: any) => {
+              reject(error);
+            });
         })
         .catch((error: any) => {
           reject(error);
         });
-    });
+    } else {
+      // If grecaptcha is not defined, resolve with an empty string or handle accordingly
+      resolve('');
+    }
   });
 };
 
+// Removed the getTurnstileToken function since we now use the token from state
+
+// Function to get session cookie
 const getSessionCookie = (): string | undefined => {
   const name = 'session_id=';
   const decodedCookie = decodeURIComponent(document.cookie);
@@ -36,54 +48,60 @@ const getSessionCookie = (): string | undefined => {
   return undefined;
 };
 
-// getChatCompletion function (unchanged)
+// Function to get chat completion
 export const getChatCompletion = async (
   endpoint: string,
   messages: MessageInterface[],
   config: ConfigInterface,
-  turnstileToken: string | null,
+  turnstileToken: string | null, // Accept turnstileToken as an argument
   apiKey?: string,
   customHeaders?: Record<string, string>
 ) => {
   const recaptchaToken = await executeRecaptcha('getChatCompletion');
   const sessionCookie = getSessionCookie();
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...customHeaders,
   };
   if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
   // Create a new config object without frequency_penalty and presence_penalty
   const { frequency_penalty, presence_penalty, ...modifiedConfig } = config;
+
+  const requestBody = {
+    messages,
+    ...modifiedConfig, // Use modified config that excludes the penalties
+    max_tokens: undefined,
+    session: sessionCookie,
+    recaptcha_token: recaptchaToken,
+    turnstile_token: turnstileToken, // Include the Turnstile token
+  };
 
   const response = await fetch(endpoint, {
     method: 'POST',
     headers,
-    body: JSON.stringify({
-      messages,
-      ...modifiedConfig, // Use modified config that excludes the penalties
-      max_tokens: undefined,
-      session: sessionCookie,
-      recaptcha_token: recaptchaToken,
-      turnstile_token: turnstileToken, 
-    }),
+    body: JSON.stringify(requestBody),
   });
+
   if (!response.ok) throw new Error(await response.text());
 
   const data = await response.json();
   return data;
 };
 
-// getChatCompletionStream function (unchanged)
+// Function to get chat completion stream
 export const getChatCompletionStream = async (
   endpoint: string,
   messages: MessageInterface[],
   config: ConfigInterface,
-  turnstileToken: string | null,
+  turnstileToken: string | null, // Accept turnstileToken as an argument
   apiKey?: string,
   customHeaders?: Record<string, string>
 ) => {
   const recaptchaToken = await executeRecaptcha('getChatCompletionStream');
   const sessionCookie = getSessionCookie();
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...customHeaders,
@@ -93,18 +111,20 @@ export const getChatCompletionStream = async (
   // Create a new config object without frequency_penalty and presence_penalty
   const { frequency_penalty, presence_penalty, ...modifiedConfig } = config;
 
+  const requestBody = {
+    messages,
+    ...modifiedConfig, // Use modified config that excludes the penalties
+    max_tokens: undefined,
+    stream: true,
+    session: sessionCookie,
+    recaptcha_token: recaptchaToken,
+    turnstile_token: turnstileToken, // Include the Turnstile token
+  };
+
   const response = await fetch(endpoint, {
     method: 'POST',
     headers,
-    body: JSON.stringify({
-      messages,
-      ...modifiedConfig, // Use modified config that excludes the penalties
-      max_tokens: undefined,
-      stream: true,
-      session: sessionCookie,
-      recaptcha_token: recaptchaToken,
-      turnstile_token: turnstileToken, // Already included
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   if (response.status === 404 || response.status === 405) {
@@ -137,20 +157,34 @@ export const getChatCompletionStream = async (
   return stream;
 };
 
-// Modified submitShareGPT function
-export const submitShareGPT = async (body: ShareGPTSubmitBodyInterface) => {
+// Function to submit to ShareGPT
+export const submitShareGPT = async (
+  body: ShareGPTSubmitBodyInterface,
+  turnstileToken: string | null // Accept turnstileToken as an argument
+) => {
+  const recaptchaToken = await executeRecaptcha('submitShareGPT');
   const sessionCookie = getSessionCookie();
 
+  const requestBody = {
+    ...body,
+    recaptcha_token: recaptchaToken,
+    turnstile_token: turnstileToken, // Include the Turnstile token
+    session: sessionCookie,
+  };
+
   const request = await fetch('https://sharegpt.com/api/conversations', {
-    body: JSON.stringify({
-      ...body,
-      session: sessionCookie,
-    }),
+    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    method: 'POST',
+    body: JSON.stringify(requestBody),
   });
+
+  if (!request.ok) {
+    // Handle errors appropriately
+    const errorText = await request.text();
+    throw new Error(`Error submitting to ShareGPT: ${errorText}`);
+  }
 
   const response = await request.json();
   const { id } = response;
