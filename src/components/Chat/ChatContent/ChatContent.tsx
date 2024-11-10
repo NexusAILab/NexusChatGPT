@@ -52,6 +52,13 @@ const ChatContent = () => {
 
   const { error } = useSubmit();
 
+  // Make the token globally accessible
+  useEffect(() => {
+    if (turnstileToken) {
+      window.turnstileToken = turnstileToken;
+    }
+  }, [turnstileToken]);
+
   return (
     <div className='flex-1 overflow-hidden'>
       <ScrollToBottom
