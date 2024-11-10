@@ -34,7 +34,8 @@ const useSubmit = () => {
         data = await getChatCompletion(
           useStore.getState().apiEndpoint,
           message,
-          _defaultChatConfig
+          _defaultChatConfig,
+          turnstileToken
         );
       } else if (apiKey) {
         // own apikey
@@ -42,7 +43,8 @@ const useSubmit = () => {
           useStore.getState().apiEndpoint,
           message,
           _defaultChatConfig,
-          apiKey
+          apiKey,
+          turnstileToken
         );
       }
     } catch (error: unknown) {
@@ -88,7 +90,8 @@ const useSubmit = () => {
         stream = await getChatCompletionStream(
           useStore.getState().apiEndpoint,
           messages,
-          chats[currentChatIndex].config
+          chats[currentChatIndex].config,
+          turnstileToken
         );
       } else if (apiKey) {
         // own apikey
@@ -96,7 +99,8 @@ const useSubmit = () => {
           useStore.getState().apiEndpoint,
           messages,
           chats[currentChatIndex].config,
-          apiKey
+          apiKey,
+          turnstileToken
         );
       }
 
