@@ -1,37 +1,32 @@
 import { ShareGPTSubmitBodyInterface } from '@type/api';
-import { ConfigInterface, MessageInterface } from '@type/chat';
+import { ConfigInterface, MessageInterface, ModelOptions } from '@type/chat';
 import { isAzureEndpoint } from '@utils/api';
 
 declare const grecaptcha: any;
 
-// Function to execute reCAPTCHA
+// Existing executeRecaptcha function
 const executeRecaptcha = async (action: string): Promise<string> => {
   return new Promise((resolve, reject) => {
-    if (typeof grecaptcha !== 'undefined') {
+    grecaptcha.ready(() => {
       grecaptcha
-        .ready(() => {
-          grecaptcha
-            .execute('6Lf9B3oqAAAAAPemzZE9SYPkj3lYSlqYbf7qun9K', { action })
-            .then((token: string) => {
-              resolve(token);
-            })
-            .catch((error: any) => {
-              reject(error);
-            });
+        .execute('6Lf9B3oqAAAAAPemzZE9SYPkj3lYSlqYbf7qun9K', { action })
+        .then((token: string) => {
+          resolve(token);
         })
         .catch((error: any) => {
           reject(error);
         });
-    } else {
-      // If grecaptcha is not defined, resolve with an empty string or handle accordingly
-      resolve('');
-    }
+    });
   });
 };
 
-// Removed the getTurnstileToken function since we now use the token from state
+// Existing getTurnstileToken function
+const getTurnstileToken = (): string | null => {
+  // @ts-ignore (since we're adding a custom property to window)
+  return window.turnstileToken || null;
+};
 
-// Function to get session cookie
+// Existing getSessionCookie function
 const getSessionCookie = (): string | undefined => {
   const name = 'session_id=';
   const decodedCookie = decodeURIComponent(document.cookie);
@@ -48,60 +43,54 @@ const getSessionCookie = (): string | undefined => {
   return undefined;
 };
 
-// Function to get chat completion
+// getChatCompletion function (unchanged)
 export const getChatCompletion = async (
   endpoint: string,
   messages: MessageInterface[],
   config: ConfigInterface,
-  turnstileToken: string | null, // Accept turnstileToken as an argument
   apiKey?: string,
   customHeaders?: Record<string, string>
 ) => {
   const recaptchaToken = await executeRecaptcha('getChatCompletion');
   const sessionCookie = getSessionCookie();
-
+  const turnstileToken = getTurnstileToken();
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...customHeaders,
   };
   if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
-
   // Create a new config object without frequency_penalty and presence_penalty
   const { frequency_penalty, presence_penalty, ...modifiedConfig } = config;
-
-  const requestBody = {
-    messages,
-    ...modifiedConfig, // Use modified config that excludes the penalties
-    max_tokens: undefined,
-    session: sessionCookie,
-    recaptcha_token: recaptchaToken,
-    turnstile_token: turnstileToken, // Include the Turnstile token
-  };
 
   const response = await fetch(endpoint, {
     method: 'POST',
     headers,
-    body: JSON.stringify(requestBody),
+    body: JSON.stringify({
+      messages,
+      ...modifiedConfig, // Use modified config that excludes the penalties
+      max_tokens: undefined,
+      session: sessionCookie,
+      recaptcha_token: recaptchaToken,
+      turnstile_token: turnstileToken, // Already included
+    }),
   });
-
   if (!response.ok) throw new Error(await response.text());
 
   const data = await response.json();
   return data;
 };
 
-// Function to get chat completion stream
+// getChatCompletionStream function (unchanged)
 export const getChatCompletionStream = async (
   endpoint: string,
   messages: MessageInterface[],
   config: ConfigInterface,
-  turnstileToken: string | null, // Accept turnstileToken as an argument
   apiKey?: string,
   customHeaders?: Record<string, string>
 ) => {
   const recaptchaToken = await executeRecaptcha('getChatCompletionStream');
   const sessionCookie = getSessionCookie();
-
+  const turnstileToken = getTurnstileToken();
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...customHeaders,
@@ -111,20 +100,18 @@ export const getChatCompletionStream = async (
   // Create a new config object without frequency_penalty and presence_penalty
   const { frequency_penalty, presence_penalty, ...modifiedConfig } = config;
 
-  const requestBody = {
-    messages,
-    ...modifiedConfig, // Use modified config that excludes the penalties
-    max_tokens: undefined,
-    stream: true,
-    session: sessionCookie,
-    recaptcha_token: recaptchaToken,
-    turnstile_token: turnstileToken, // Include the Turnstile token
-  };
-
   const response = await fetch(endpoint, {
     method: 'POST',
     headers,
-    body: JSON.stringify(requestBody),
+    body: JSON.stringify({
+      messages,
+      ...modifiedConfig, // Use modified config that excludes the penalties
+      max_tokens: undefined,
+      stream: true,
+      session: sessionCookie,
+      recaptcha_token: recaptchaToken,
+      turnstile_token: turnstileToken, // Already included
+    }),
   });
 
   if (response.status === 404 || response.status === 405) {
