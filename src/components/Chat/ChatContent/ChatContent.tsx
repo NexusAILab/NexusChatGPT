@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ScrollToBottom from 'react-scroll-to-bottom';
 import useStore from '@store/store';
 
@@ -12,7 +12,7 @@ import useSubmit from '@hooks/useSubmit';
 import DownloadChat from './DownloadChat';
 import CloneChat from './CloneChat';
 import ShareGPT from '@components/ShareGPT';
-import Turnstile, { useTurnstile } from 'react-turnstile'; // Imported Turnstile
+import Turnstile from 'react-turnstile'; // Imported Turnstile
 
 const ChatContent = () => {
   const inputRole = useStore((state) => state.inputRole);
@@ -34,11 +34,13 @@ const ChatContent = () => {
       : 0
   );
   const advancedMode = useStore((state) => state.advancedMode);
-  const generating = useStore.getState().generating;
+  const generating = useStore((state) => state.generating);
   const hideSideMenu = useStore((state) => state.hideSideMenu);
 
   const saveRef = useRef<HTMLDivElement>(null);
-  const { token, reset } = useTurnstile(); // Hook to get the token and reset function
+  
+  // State to track CAPTCHA success
+  const [captchaSuccess, setCaptchaSuccess] = useState(false);
 
   // Clear error at the start of generating new messages
   useEffect(() => {
@@ -48,14 +50,6 @@ const ChatContent = () => {
   }, [generating]);
 
   const { error } = useSubmit();
-
-  // Handle token changes (e.g., save it to state or send it to your server)
-  useEffect(() => {
-    if (token) {
-      console.log('Turnstile token:', token);
-      // You can dispatch an action or save the token to your store here
-    }
-  }, [token]);
 
   return (
     <div className='flex-1 overflow-hidden'>
@@ -81,7 +75,9 @@ const ChatContent = () => {
                     content={message.content}
                     messageIndex={index}
                   />
-                  {!generating && advancedMode && <NewMessageButton messageIndex={index} />}
+                  {!generating && advancedMode && (
+                    <NewMessageButton messageIndex={index} />
+                  )}
                 </React.Fragment>
               )
             ))}
@@ -115,26 +111,28 @@ const ChatContent = () => {
                 : 'md:max-w-3xl lg:max-w-3xl xl:max-w-4xl'
             }`}
           >
-            {/* Render the Turnstile CAPTCHA above the buttons */}
-            <div className='flex justify-center my-4'>
-              <Turnstile
-                sitekey='0x4AAAAAAAzRsaZd0P9-qFot' // Your site key
-                onSuccess={(token) => {
-                  console.log('Turnstile success:', token);
-                  // Handle the successful CAPTCHA verification
-                }}
-                onError={() => {
-                  console.error('Turnstile error');
-                  // Handle errors here
-                }}
-                onExpire={() => {
-                  console.log('Turnstile expired');
-                  // Handle expiration (e.g., prompt user to complete CAPTCHA again)
-                }}
-                theme='auto' // Moved 'theme' to be a direct prop
-                // Removed the 'options' prop
-              />
-            </div>
+            {/* Conditionally render the Turnstile CAPTCHA above the buttons */}
+            {!captchaSuccess && (
+              <div className='flex justify-center my-4'>
+                <Turnstile
+                  sitekey='0x4AAAAAAAzRsaZd0P9-qFot' // Your site key
+                  onSuccess={(token) => {
+                    console.log('Turnstile success:', token);
+                    setCaptchaSuccess(true); // Update state to hide CAPTCHA
+                    // Handle the token if needed
+                  }}
+                  onError={() => {
+                    console.error('Turnstile error');
+                    // Handle errors here
+                  }}
+                  onExpire={() => {
+                    console.log('Turnstile expired');
+                    // Handle expiration if needed
+                  }}
+                  theme='auto' // Pass 'theme' directly as a prop
+                />
+              </div>
+            )}
 
             {!useStore.getState().generating && (
               <div className='md:w-[calc(100%-50px)] flex gap-4 flex-wrap justify-center'>
