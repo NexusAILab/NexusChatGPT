@@ -3,19 +3,24 @@ import { ConfigInterface, MessageInterface, ModelOptions } from '@type/chat';
 import { isAzureEndpoint } from '@utils/api';
 
 declare const grecaptcha: any;
-//test
+
+// Existing executeRecaptcha function
 const executeRecaptcha = async (action: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     grecaptcha.ready(() => {
-      grecaptcha.execute('6Lf9B3oqAAAAAPemzZE9SYPkj3lYSlqYbf7qun9K', { action }).then((token: string) => {
-        resolve(token);
-      }).catch((error: any) => {
-        reject(error);
-      });
+      grecaptcha
+        .execute('6Lf9B3oqAAAAAPemzZE9SYPkj3lYSlqYbf7qun9K', { action })
+        .then((token: string) => {
+          resolve(token);
+        })
+        .catch((error: any) => {
+          reject(error);
+        });
     });
   });
 };
 
+// Existing getTurnstileToken function
 const getTurnstileToken = (): string | null => {
   const turnstileInput = document.querySelector(
     '.cf-turnstile input[name="cf-turnstile-response"]'
@@ -23,6 +28,7 @@ const getTurnstileToken = (): string | null => {
   return turnstileInput ? turnstileInput.value : null;
 };
 
+// Existing getSessionCookie function
 const getSessionCookie = (): string | undefined => {
   const name = 'session_id=';
   const decodedCookie = decodeURIComponent(document.cookie);
@@ -39,6 +45,7 @@ const getSessionCookie = (): string | undefined => {
   return undefined;
 };
 
+// getChatCompletion function (unchanged)
 export const getChatCompletion = async (
   endpoint: string,
   messages: MessageInterface[],
@@ -66,7 +73,7 @@ export const getChatCompletion = async (
       max_tokens: undefined,
       session: sessionCookie,
       recaptcha_token: recaptchaToken,
-      turnstile_token: turnstileToken
+      turnstile_token: turnstileToken, // Already included
     }),
   });
   if (!response.ok) throw new Error(await response.text());
@@ -75,6 +82,7 @@ export const getChatCompletion = async (
   return data;
 };
 
+// getChatCompletionStream function (unchanged)
 export const getChatCompletionStream = async (
   endpoint: string,
   messages: MessageInterface[],
@@ -104,7 +112,7 @@ export const getChatCompletionStream = async (
       stream: true,
       session: sessionCookie,
       recaptcha_token: recaptchaToken,
-      turnstile_token: turnstileToken
+      turnstile_token: turnstileToken, // Already included
     }),
   });
 
@@ -138,12 +146,19 @@ export const getChatCompletionStream = async (
   return stream;
 };
 
+// Modified submitShareGPT function
 export const submitShareGPT = async (body: ShareGPTSubmitBodyInterface) => {
   const recaptchaToken = await executeRecaptcha('submitShareGPT');
+  const turnstileToken = getTurnstileToken(); // Get the turnstile token
   const sessionCookie = getSessionCookie();
 
   const request = await fetch('https://sharegpt.com/api/conversations', {
-    body: JSON.stringify({ ...body, recaptcha_token: recaptchaToken, session: sessionCookie }),
+    body: JSON.stringify({
+      ...body,
+      recaptcha_token: recaptchaToken,
+      turnstile_token: turnstileToken, // Include turnstile_token in the request body
+      session: sessionCookie,
+    }),
     headers: {
       'Content-Type': 'application/json',
     },
