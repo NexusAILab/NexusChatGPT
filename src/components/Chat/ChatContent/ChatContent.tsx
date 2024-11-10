@@ -130,7 +130,8 @@ const ChatContent = () => {
                   setTurnstileToken(null);
                 }}
                 theme='auto'
-                retry='auto' // Corrected prop and value
+                retry='auto'
+                refreshExpired='auto'
               />
 
             </div>
