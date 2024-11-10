@@ -1,8 +1,9 @@
+// store.ts
 import { StoreApi, create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { ChatSlice, createChatSlice } from './chat-slice';
 import { InputSlice, createInputSlice } from './input-slice';
-import { AuthSlice, createAuthSlice } from './auth-slice';
+import { AuthSlice, createAuthSlice } from './auth-slice'; // Ensure this import is correct
 import { ConfigSlice, createConfigSlice } from './config-slice';
 import { PromptSlice, createPromptSlice } from './prompt-slice';
 import { ToastSlice, createToastSlice } from './toast-slice';
@@ -59,6 +60,8 @@ export const createPartializedState = (state: StoreState) => ({
   markdownMode: state.markdownMode,
   totalTokenUsed: state.totalTokenUsed,
   countTotalTokens: state.countTotalTokens,
+  // Include turnstileToken if you want to persist it
+  // turnstileToken: state.turnstileToken,
 });
 
 const useStore = create<StoreState>()(
