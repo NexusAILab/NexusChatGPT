@@ -157,34 +157,15 @@ export const getChatCompletionStream = async (
   return stream;
 };
 
-// Function to submit to ShareGPT
-export const submitShareGPT = async (
-  body: ShareGPTSubmitBodyInterface,
-  turnstileToken: string | null // Accept turnstileToken as an argument
-) => {
-  const recaptchaToken = await executeRecaptcha('submitShareGPT');
-  const sessionCookie = getSessionCookie();
 
-  const requestBody = {
-    ...body,
-    recaptcha_token: recaptchaToken,
-    turnstile_token: turnstileToken, // Include the Turnstile token
-    session: sessionCookie,
-  };
-
+export const submitShareGPT = async (body: ShareGPTSubmitBodyInterface) => {
   const request = await fetch('https://sharegpt.com/api/conversations', {
-    method: 'POST',
+    body: JSON.stringify(body),
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(requestBody),
+    method: 'POST',
   });
-
-  if (!request.ok) {
-    // Handle errors appropriately
-    const errorText = await request.text();
-    throw new Error(`Error submitting to ShareGPT: ${errorText}`);
-  }
 
   const response = await request.json();
   const { id } = response;
