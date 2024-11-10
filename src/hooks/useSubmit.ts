@@ -18,6 +18,7 @@ const useSubmit = () => {
   const generating = useStore((state) => state.generating);
   const currentChatIndex = useStore((state) => state.currentChatIndex);
   const setChats = useStore((state) => state.setChats);
+  const turnstileToken = useStore((state) => state.turnstileToken);
 
   const generateTitle = async (
     message: MessageInterface[]
