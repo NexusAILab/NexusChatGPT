@@ -38,11 +38,11 @@ const ChatContent = () => {
   const hideSideMenu = useStore((state) => state.hideSideMenu);
 
   const saveRef = useRef<HTMLDivElement>(null);
-  
+
   // State to track CAPTCHA success
   const [captchaSuccess, setCaptchaSuccess] = useState(false);
   const setTurnstileToken = useStore((state) => state.setTurnstileToken);
-  
+
   // Clear error at the start of generating new messages
   useEffect(() => {
     if (generating) {
@@ -112,29 +112,26 @@ const ChatContent = () => {
                 : 'md:max-w-3xl lg:max-w-3xl xl:max-w-4xl'
             }`}
           >
-            {/* Conditionally render the Turnstile CAPTCHA above the buttons */}
-            {!captchaSuccess && (
-              <div className='flex justify-center my-4'>
-                <Turnstile
-                  sitekey='0x4AAAAAAAzRsaZd0P9-qFot' 
-                  onSuccess={(token) => {
-                    console.log('Turnstile success:', token);
-                    setCaptchaSuccess(true); 
-                    setTurnstileToken(token); 
-                  }}
-
-                  onError={() => {
-                    console.error('Turnstile error');
-                  }}
-                  onExpire={() => {
-                    console.log('Turnstile expired');
-                    setCaptchaSuccess(false); 
-                    setTurnstileToken(null); 
-                  }}
-                  theme='auto' 
-                />
-              </div>
-            )}
+            {/* Render the Turnstile CAPTCHA above the buttons */}
+            <div className='flex justify-center my-4'>
+              <Turnstile
+                sitekey='0x4AAAAAAAzRsaZd0P9-qFot' 
+                onSuccess={(token) => {
+                  console.log('Turnstile success:', token);
+                  setCaptchaSuccess(true); 
+                  setTurnstileToken(token); 
+                }}
+                onError={() => {
+                  console.error('Turnstile error');
+                }}
+                onExpire={() => {
+                  console.log('Turnstile expired');
+                  setCaptchaSuccess(false); 
+                  setTurnstileToken(null); 
+                }}
+                theme='auto' 
+              />
+            </div>
 
             {!useStore.getState().generating && (
               <div className='md:w-[calc(100%-50px)] flex gap-4 flex-wrap justify-center'>
