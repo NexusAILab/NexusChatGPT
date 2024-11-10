@@ -1,7 +1,7 @@
 import { ShareGPTSubmitBodyInterface } from '@type/api';
 import { ConfigInterface, MessageInterface, ModelOptions } from '@type/chat';
 import { isAzureEndpoint } from '@utils/api';
-import { useStore } from '@store/store';
+import useStore from '@store/store';
 
 declare const grecaptcha: any;
 
