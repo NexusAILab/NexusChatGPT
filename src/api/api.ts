@@ -20,15 +20,6 @@ const executeRecaptcha = async (action: string): Promise<string> => {
   });
 };
 
-// Existing getTurnstileToken function
-const getTurnstileToken = (): string | null => {
-  const turnstileInput = document.querySelector(
-    '.cf-turnstile input[name="cf-turnstile-response"]'
-  ) as HTMLInputElement;
-  return turnstileInput ? turnstileInput.value : null;
-};
-
-// Existing getSessionCookie function
 const getSessionCookie = (): string | undefined => {
   const name = 'session_id=';
   const decodedCookie = decodeURIComponent(document.cookie);
@@ -50,12 +41,12 @@ export const getChatCompletion = async (
   endpoint: string,
   messages: MessageInterface[],
   config: ConfigInterface,
+  turnstileToken: string | null,
   apiKey?: string,
   customHeaders?: Record<string, string>
 ) => {
   const recaptchaToken = await executeRecaptcha('getChatCompletion');
   const sessionCookie = getSessionCookie();
-  const turnstileToken = getTurnstileToken();
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...customHeaders,
@@ -73,7 +64,7 @@ export const getChatCompletion = async (
       max_tokens: undefined,
       session: sessionCookie,
       recaptcha_token: recaptchaToken,
-      turnstile_token: turnstileToken, // Already included
+      turnstile_token: turnstileToken, 
     }),
   });
   if (!response.ok) throw new Error(await response.text());
@@ -87,12 +78,12 @@ export const getChatCompletionStream = async (
   endpoint: string,
   messages: MessageInterface[],
   config: ConfigInterface,
+  turnstileToken: string | null,
   apiKey?: string,
   customHeaders?: Record<string, string>
 ) => {
   const recaptchaToken = await executeRecaptcha('getChatCompletionStream');
   const sessionCookie = getSessionCookie();
-  const turnstileToken = getTurnstileToken();
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...customHeaders,
@@ -148,15 +139,11 @@ export const getChatCompletionStream = async (
 
 // Modified submitShareGPT function
 export const submitShareGPT = async (body: ShareGPTSubmitBodyInterface) => {
-  const recaptchaToken = await executeRecaptcha('submitShareGPT');
-  const turnstileToken = getTurnstileToken(); // Get the turnstile token
   const sessionCookie = getSessionCookie();
 
   const request = await fetch('https://sharegpt.com/api/conversations', {
     body: JSON.stringify({
       ...body,
-      recaptcha_token: recaptchaToken,
-      turnstile_token: turnstileToken, // Include turnstile_token in the request body
       session: sessionCookie,
     }),
     headers: {
