@@ -46,9 +46,6 @@ const ChatContent = () => {
   // State variable to force re-rendering of the Turnstile component
   const [captchaResetKey, setCaptchaResetKey] = useState(0);
 
-  // State variable to control the visibility of the CAPTCHA
-  const [showCaptcha, setShowCaptcha] = useState(false);
-
   // Clear error at the start of generating new messages
   useEffect(() => {
     if (generating) {
@@ -67,13 +64,6 @@ const ChatContent = () => {
   }, [generating]);
 
   const { error } = useSubmit();
-
-  // Show CAPTCHA when error indicates it's required
-  useEffect(() => {
-    if (error.toLowerCase().includes('captcha')) {
-      setShowCaptcha(true);
-    }
-  }, [error]);
 
   return (
     <div className='flex-1 overflow-hidden'>
@@ -135,34 +125,31 @@ const ChatContent = () => {
                 : 'md:max-w-3xl lg:max-w-3xl xl:max-w-4xl'
             }`}
           >
-            {/* Render the Turnstile CAPTCHA only when needed */}
-            {showCaptcha && (
-              <div className='flex justify-center my-4'>
-                <Turnstile
-                  key={captchaResetKey} // Use captchaResetKey to force re-render
-                  sitekey='0x4AAAAAAAzRsaZd0P9-qFot'
-                  onSuccess={(token) => {
-                    console.log('Turnstile success:', token);
-                    setCaptchaSuccess(true);
-                    setTurnstileToken(token);
-                    setShowCaptcha(false); // Hide CAPTCHA after success
-                  }}
-                  onError={() => {
-                    console.error('Turnstile error');
-                    setCaptchaSuccess(false);
-                    setTurnstileToken(null);
-                  }}
-                  onExpire={() => {
-                    console.log('Turnstile expired');
-                    setCaptchaSuccess(false);
-                    setTurnstileToken(null);
-                  }}
-                  theme='auto'
-                  retry='auto'
-                  refreshExpired='auto'
-                />
-              </div>
-            )}
+            {/* Render the Turnstile CAPTCHA above the buttons */}
+            <div className='flex justify-center my-4'>
+              <Turnstile
+                key={captchaResetKey} // Use captchaResetKey to force re-render
+                sitekey='0x4AAAAAAAzRsaZd0P9-qFot'
+                onSuccess={(token) => {
+                  console.log('Turnstile success:', token);
+                  setCaptchaSuccess(true);
+                  setTurnstileToken(token);
+                }}
+                onError={() => {
+                  console.error('Turnstile error');
+                  setCaptchaSuccess(false);
+                  setTurnstileToken(null);
+                }}
+                onExpire={() => {
+                  console.log('Turnstile expired');
+                  setCaptchaSuccess(false);
+                  setTurnstileToken(null);
+                }}
+                theme='auto'
+                retry='auto'
+                refreshExpired='auto'
+              />
+            </div>
 
             {!useStore.getState().generating && (
               <div className='md:w-[calc(100%-50px)] flex gap-4 flex-wrap justify-center'>
