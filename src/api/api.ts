@@ -1,6 +1,7 @@
 import { ShareGPTSubmitBodyInterface } from '@type/api';
 import { ConfigInterface, MessageInterface, ModelOptions } from '@type/chat';
 import { isAzureEndpoint } from '@utils/api';
+import { useStore } from '@store/store';
 
 declare const grecaptcha: any;
 
@@ -18,12 +19,6 @@ const executeRecaptcha = async (action: string): Promise<string> => {
         });
     });
   });
-};
-
-// Existing getTurnstileToken function
-const getTurnstileToken = (): string | null => {
-  // @ts-ignore (since we're adding a custom property to window)
-  return window.turnstileToken || null;
 };
 
 // Existing getSessionCookie function
@@ -53,7 +48,7 @@ export const getChatCompletion = async (
 ) => {
   const recaptchaToken = await executeRecaptcha('getChatCompletion');
   const sessionCookie = getSessionCookie();
-  const turnstileToken = getTurnstileToken();
+  const turnstileToken = useStore.getState().turnstileToken;
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...customHeaders,
@@ -90,7 +85,7 @@ export const getChatCompletionStream = async (
 ) => {
   const recaptchaToken = await executeRecaptcha('getChatCompletionStream');
   const sessionCookie = getSessionCookie();
-  const turnstileToken = getTurnstileToken();
+  const turnstileToken = useStore.getState().turnstileToken;
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...customHeaders,
