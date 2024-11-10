@@ -157,7 +157,6 @@ export const getChatCompletionStream = async (
   return stream;
 };
 
-
 export const submitShareGPT = async (body: ShareGPTSubmitBodyInterface) => {
   const request = await fetch('https://sharegpt.com/api/conversations', {
     body: JSON.stringify(body),
