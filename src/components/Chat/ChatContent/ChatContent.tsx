@@ -41,7 +41,7 @@ const ChatContent = () => {
   
   // State to track CAPTCHA success
   const [captchaSuccess, setCaptchaSuccess] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const setTurnstileToken = useStore((state) => state.setTurnstileToken);
   
   // Clear error at the start of generating new messages
   useEffect(() => {
@@ -51,13 +51,6 @@ const ChatContent = () => {
   }, [generating]);
 
   const { error } = useSubmit();
-
-  // Make the token globally accessible
-  useEffect(() => {
-    if (turnstileToken) {
-      window.turnstileToken = turnstileToken;
-    }
-  }, [turnstileToken]);
 
   return (
     <div className='flex-1 overflow-hidden'>
