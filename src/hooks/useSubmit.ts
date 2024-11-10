@@ -18,7 +18,8 @@ const useSubmit = () => {
   const generating = useStore((state) => state.generating);
   const currentChatIndex = useStore((state) => state.currentChatIndex);
   const setChats = useStore((state) => state.setChats);
-  const turnstileToken = useStore((state) => state.turnstileToken);
+  // Removed turnstileToken import as it's not needed here
+  // const turnstileToken = useStore((state) => state.turnstileToken);
 
   const generateTitle = async (
     message: MessageInterface[]
@@ -26,26 +27,26 @@ const useSubmit = () => {
     let data;
     try {
       if (!apiKey || apiKey.length === 0) {
-        // official endpoint
+        // Official endpoint
         if (apiEndpoint === officialAPIEndpoint) {
           throw new Error(t('noApiKeyWarning') as string);
         }
 
-        // other endpoints
+        // Other endpoints
         data = await getChatCompletion(
           useStore.getState().apiEndpoint,
           message,
-          _defaultChatConfig,
-          turnstileToken
+          _defaultChatConfig
+          // Removed turnstileToken from function call
         );
       } else if (apiKey) {
-        // own apikey
+        // Own API key
         data = await getChatCompletion(
           useStore.getState().apiEndpoint,
           message,
           _defaultChatConfig,
-          apiKey,
-          turnstileToken
+          apiKey
+          // Removed turnstileToken from function call
         );
       }
     } catch (error: unknown) {
@@ -80,28 +81,28 @@ const useSubmit = () => {
       );
       if (messages.length === 0) throw new Error('Message exceed max token!');
 
-      // no api key (free)
+      // No API key (free)
       if (!apiKey || apiKey.length === 0) {
-        // official endpoint
+        // Official endpoint
         if (apiEndpoint === officialAPIEndpoint) {
           throw new Error(t('noApiKeyWarning') as string);
         }
 
-        // other endpoints
+        // Other endpoints
         stream = await getChatCompletionStream(
           useStore.getState().apiEndpoint,
           messages,
-          chats[currentChatIndex].config,
-          turnstileToken
+          chats[currentChatIndex].config
+          // Removed turnstileToken from function call
         );
       } else if (apiKey) {
-        // own apikey
+        // Own API key
         stream = await getChatCompletionStream(
           useStore.getState().apiEndpoint,
           messages,
           chats[currentChatIndex].config,
-          apiKey,
-          turnstileToken
+          apiKey
+          // Removed turnstileToken from function call
         );
       }
 
@@ -150,7 +151,7 @@ const useSubmit = () => {
         stream.cancel();
       }
 
-      // update tokens used in chatting
+      // Update tokens used in chatting
       const currChats = useStore.getState().chats;
       const countTotalTokens = useStore.getState().countTotalTokens;
 
@@ -164,7 +165,7 @@ const useSubmit = () => {
         );
       }
 
-      // generate title for new chats
+      // Generate title for new chats
       if (
         useStore.getState().autoTitle &&
         currChats &&
@@ -192,7 +193,7 @@ const useSubmit = () => {
         updatedChats[currentChatIndex].titleSet = true;
         setChats(updatedChats);
 
-        // update tokens used for generating title
+        // Update tokens used for generating title
         if (countTotalTokens) {
           const model = _defaultChatConfig.model;
           updateTotalTokenUsed(model, [message], {
