@@ -1,9 +1,8 @@
-// store.ts
 import { StoreApi, create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { ChatSlice, createChatSlice } from './chat-slice';
 import { InputSlice, createInputSlice } from './input-slice';
-import { AuthSlice, createAuthSlice } from './auth-slice'; // Ensure this import is correct
+import { AuthSlice, createAuthSlice } from './auth-slice';
 import { ConfigSlice, createConfigSlice } from './config-slice';
 import { PromptSlice, createPromptSlice } from './prompt-slice';
 import { ToastSlice, createToastSlice } from './toast-slice';
@@ -28,6 +27,7 @@ import {
   migrateV7,
 } from './migrate';
 
+// StoreState now includes the updated AuthSlice
 export type StoreState = ChatSlice &
   InputSlice &
   AuthSlice &
@@ -40,6 +40,7 @@ export type StoreSlice<T> = (
   get: StoreApi<StoreState>['getState']
 ) => T;
 
+// Updated createPartializedState to include turnstileToken if necessary
 export const createPartializedState = (state: StoreState) => ({
   chats: state.chats,
   currentChatIndex: state.currentChatIndex,
@@ -60,7 +61,7 @@ export const createPartializedState = (state: StoreState) => ({
   markdownMode: state.markdownMode,
   totalTokenUsed: state.totalTokenUsed,
   countTotalTokens: state.countTotalTokens,
-  // Include turnstileToken if you want to persist it
+  // You can include turnstileToken here if you want to persist it
   // turnstileToken: state.turnstileToken,
 });
 
@@ -82,6 +83,7 @@ const useStore = create<StoreState>()(
         switch (version) {
           case 0:
             migrateV0(persistedState as LocalStorageInterfaceV0ToV1);
+            // Note: fall-through intended for migration
           case 1:
             migrateV1(persistedState as LocalStorageInterfaceV1ToV2);
           case 2:
@@ -96,6 +98,8 @@ const useStore = create<StoreState>()(
             migrateV6(persistedState as LocalStorageInterfaceV6ToV7);
           case 7:
             migrateV7(persistedState as LocalStorageInterfaceV7oV8);
+            break;
+          default:
             break;
         }
         return persistedState as StoreState;
