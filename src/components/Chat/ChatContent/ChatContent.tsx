@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ScrollToBottom from 'react-scroll-to-bottom';
 import useStore from '@store/store';
 
@@ -11,7 +11,8 @@ import CrossIcon from '@icon/CrossIcon';
 import useSubmit from '@hooks/useSubmit';
 import DownloadChat from './DownloadChat';
 import CloneChat from './CloneChat';
-import Turnstile, { getTurnstile } from 'react-turnstile'; // Import getTurnstile
+import ShareGPT from '@components/ShareGPT';
+import Turnstile from 'react-turnstile';
 
 const ChatContent = () => {
   const inputRole = useStore((state) => state.inputRole);
@@ -42,8 +43,8 @@ const ChatContent = () => {
   const [captchaSuccess, setCaptchaSuccess] = useState(false);
   const setTurnstileToken = useStore((state) => state.setTurnstileToken);
 
-  // State to store the Turnstile widget ID
-  const [turnstileWidgetId, setTurnstileWidgetId] = useState<string | null>(null);
+  // Ref for the Turnstile component
+  const turnstileRef = useRef(null);
 
   // Clear error at the start of generating new messages
   useEffect(() => {
@@ -52,20 +53,17 @@ const ChatContent = () => {
     }
   }, [generating]);
 
-  // Destructure 'handleSubmit' instead of 'onSubmit'
-  const { error, handleSubmit } = useSubmit();
+  const { error } = useSubmit();
 
-  // Function to handle form submission
-  const handleSubmission = async () => {
-    // Your submission logic here
-    await handleSubmit();
-
-    // After submission, reset the Turnstile widget
-    const turnstile = getTurnstile();
-    if (turnstile && turnstileWidgetId !== null) {
-      turnstile.reset(turnstileWidgetId);
+  // Reset the Turnstile after submission
+  useEffect(() => {
+    if (!generating && turnstileRef.current) {
+      console.log('Resetting Turnstile after submission');
+      turnstileRef.current.reset();
+      setTurnstileToken(null);
+      setCaptchaSuccess(false);
     }
-  };
+  }, [generating]);
 
   return (
     <div className='flex-1 overflow-hidden'>
@@ -83,21 +81,20 @@ const ChatContent = () => {
             {!generating && advancedMode && messages?.length === 0 && (
               <NewMessageButton messageIndex={-1} />
             )}
-            {messages?.map(
-              (message, index) =>
-                (advancedMode || index !== 0 || message.role !== 'system') && (
-                  <React.Fragment key={index}>
-                    <Message
-                      role={message.role}
-                      content={message.content}
-                      messageIndex={index}
-                    />
-                    {!generating && advancedMode && (
-                      <NewMessageButton messageIndex={index} />
-                    )}
-                  </React.Fragment>
-                )
-            )}
+            {messages?.map((message, index) => (
+              (advancedMode || index !== 0 || message.role !== 'system') && (
+                <React.Fragment key={index}>
+                  <Message
+                    role={message.role}
+                    content={message.content}
+                    messageIndex={index}
+                  />
+                  {!generating && advancedMode && (
+                    <NewMessageButton messageIndex={index} />
+                  )}
+                </React.Fragment>
+              )
+            ))}
           </div>
 
           <Message
@@ -131,12 +128,8 @@ const ChatContent = () => {
             {/* Render the Turnstile CAPTCHA above the buttons */}
             <div className='flex justify-center my-4'>
               <Turnstile
+                ref={turnstileRef}
                 sitekey='0x4AAAAAAAzRsaZd0P9-qFot'
-                // Get the widget ID on load
-                onLoad={(widgetId) => {
-                  setTurnstileWidgetId(widgetId);
-                  console.log('Turnstile widget loaded with ID:', widgetId);
-                }}
                 onSuccess={(token) => {
                   console.log('Turnstile success:', token);
                   setCaptchaSuccess(true);
@@ -144,17 +137,13 @@ const ChatContent = () => {
                 }}
                 onError={() => {
                   console.error('Turnstile error');
+                  setCaptchaSuccess(false);
+                  setTurnstileToken(null);
                 }}
                 onExpire={() => {
                   console.log('Turnstile expired');
                   setCaptchaSuccess(false);
                   setTurnstileToken(null);
-
-                  // Reset the widget to get a new token
-                  const turnstile = getTurnstile();
-                  if (turnstile && turnstileWidgetId !== null) {
-                    turnstile.reset(turnstileWidgetId);
-                  }
                 }}
                 theme='auto'
                 retry='auto'
