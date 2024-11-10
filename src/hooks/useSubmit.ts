@@ -25,14 +25,16 @@ const useSubmit = () => {
     let data;
     try {
       if (!apiKey || apiKey.length === 0) {
+        // official endpoint
+        if (apiEndpoint === officialAPIEndpoint) {
+          throw new Error(t('noApiKeyWarning') as string);
+        }
+
         // other endpoints
         data = await getChatCompletion(
           useStore.getState().apiEndpoint,
           message,
-          _defaultChatConfig,
-          null,
-          undefined,
-          undefined
+          _defaultChatConfig
         );
       } else if (apiKey) {
         // own apikey
@@ -40,9 +42,7 @@ const useSubmit = () => {
           useStore.getState().apiEndpoint,
           message,
           _defaultChatConfig,
-          null,
-          apiKey,
-          undefined
+          apiKey
         );
       }
     } catch (error: unknown) {
@@ -79,14 +79,16 @@ const useSubmit = () => {
 
       // no api key (free)
       if (!apiKey || apiKey.length === 0) {
+        // official endpoint
+        if (apiEndpoint === officialAPIEndpoint) {
+          throw new Error(t('noApiKeyWarning') as string);
+        }
+
         // other endpoints
         stream = await getChatCompletionStream(
           useStore.getState().apiEndpoint,
           messages,
-          chats[currentChatIndex].config,
-          null,
-          undefined,
-          undefined
+          chats[currentChatIndex].config
         );
       } else if (apiKey) {
         // own apikey
@@ -94,9 +96,7 @@ const useSubmit = () => {
           useStore.getState().apiEndpoint,
           messages,
           chats[currentChatIndex].config,
-          null,
-          apiKey,
-          undefined
+          apiKey
         );
       }
 
